@@ -3,9 +3,11 @@ const router = express.Router();
 
 const userController = require("../controllers/user-controller");
 const UserSignUpRequestValidate = require("../middlewares/UserSignUpRequestValidate");
-const CheckUserAlreadyExists = require("../middlewares/CheckUserAlreadyExists");
+const UserSignUpAlreadyExists = require("../middlewares/UserSignUpAlreadyExists");
+const UserLoginExists = require("../middlewares/UserLoginExists");
 
 router.get("/", userController.getUserByEmail);
-router.post("/signup", UserSignUpRequestValidate, CheckUserAlreadyExists, userController.createUser);
+router.post("/signup", UserSignUpRequestValidate, UserSignUpAlreadyExists, userController.createUser);
+router.post("/login", UserLoginExists, userController.login)
 
 module.exports = router;
