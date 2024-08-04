@@ -38,7 +38,7 @@ exports.login = async (req, res) => {
         const {email, password} = req.body;
         const user = await userService.authenticate(email, password);
         if (user) {
-            const token = jwt.sign({ id: user.id }, secretKey, { expiresIn: "1h" });
+            const token = jwt.sign({ id: user.id }, secretKey, { expiresIn: "24h" });
             res.status(200).json({ message: "Login success", body: {token, user}, status: 'success' })
         } else {
             res.status(200).json({ message: 'Wrong credentials', status: 'error' })

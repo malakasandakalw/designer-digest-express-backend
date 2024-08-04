@@ -1,14 +1,12 @@
 const db = require("../db-connector");
 
-exports.createPost = async () => {
+exports.checkUserAvailable = async (id) => {
     try {
-        // const result = await db.query("SELECT * FROM users WHERE email=$1", [email])
-        // if(result.rows.length) {
-        //     return true;
-        // }
-        // return false;
+        const result = await db.query("SELECT * FROM users WHERE id=$1 AND user_role=(SELECT id FROM user_roles WHERE key='DESIGNER')", [id])
+        if (result.rows.length) return true;
+        return false;
     } catch (e) {
-        // console.error('Error when user checking:', e.message, e.stack);
-        // throw new Error('Error when user checking', e);
+        console.error('Error when checking DESIGNER aacounts:', e.message, e.stack);
+        throw new Error('Error when checking DESIGNER aacounts', e);
     }
 }
