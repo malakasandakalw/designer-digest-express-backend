@@ -25,6 +25,14 @@ exports.createUser = async (req, res) => {
     }
 }
 
+exports.verify = async (req, res) => {
+    try {
+        res.status(200).json({ message: 'User verified', verified: true, status: 'success' });
+    } catch (e) {
+        res.status(200).json({ message: 'Internal server error', e, status: 'error'  });
+    }
+}
+
 exports.login = async (req, res) => {
     try {
         const {email, password} = req.body;

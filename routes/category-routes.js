@@ -2,7 +2,8 @@ const express = require('express');
 const TokenAuthenticator = require('../middlewares/TokenAuthenticator');
 const router = express.Router();
 
-router.get("/", TokenAuthenticator);
-router.post("/create-post", TokenAuthenticator, )
+const categoryController = require("../controllers/category-controller");
+
+router.get("/all", categoryController.getAll);
 
 module.exports = router;
