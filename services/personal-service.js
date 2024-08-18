@@ -7,7 +7,7 @@ createDesignerAccount = async (userId, locationId) => {
             return result.rows[0].id
         }
         return null
-    } catch (error) {
+    } catch (e) {
         console.error('Error when creating designer:', e.message, e.stack);
         throw new Error('Error when creating designer', e);
     }
@@ -23,7 +23,7 @@ assignCategoryForDesigner = async (categories, designerId) => {
             }
         }
         return assignedCategories
-    } catch (error) {
+    } catch (e) {
         console.error('Error when assign category to designer:', e.message, e.stack);
         throw new Error('Error when assign category to designer', e);
     }
@@ -36,7 +36,7 @@ updateProfileData = async (userId, first_name, last_name, profile_picture, phone
             return true
         }
         return false
-    } catch (error) {
+    } catch (e) {
         console.error('Error when profile:', e.message, e.stack);
         throw new Error('Error when profile', e);        
     }
@@ -49,7 +49,7 @@ updateUserRoleToDesigner = async (userId) => {
             return true
         }
         return false
-    } catch (error) {
+    } catch (e) {
         console.error('Error when updating role to designer:', e.message, e.stack);
         throw new Error('Error when updating role to designer', e);
     }
@@ -62,7 +62,7 @@ updateUserRoleToEmployer = async (userId) => {
             return true
         }
         return false
-    } catch (error) {
+    } catch (e) {
         console.error('Error when updating role to employer:', e.message, e.stack);
         throw new Error('Error when updating role to employer', e);
     }
@@ -74,7 +74,7 @@ exports.updateProfile = async (userId, first_name, last_name, profile_picture, p
     try {
         const result = await updateProfileData(userId, first_name, last_name, profile_picture, phone)
         return result;
-    } catch (error) {
+    } catch (e) {
         console.error('Error when updating:', e.message, e.stack);
         throw new Error('Error when updating', e);
     }
