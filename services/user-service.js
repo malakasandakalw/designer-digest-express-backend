@@ -44,9 +44,41 @@ exports.authenticate = async (email, password) => {
 
 }
 
-async function getUserByEmail (email) {
+exports.getUserbyId = async (userId) => {
+    const user = await getUserDataById(userId);
+    if(user) {
+        const data = {
+            id: user.id,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            is_verified: user.is_verified,
+            profile_picture: user.profile_picture,
+            role: user.role,
+            phone: user.phone
+        }
+        return data;
+    } else {
+        return null;
+    }
+
+}
+
+async function getUserByEmail(email) {
     try {
-        const result = await db.query('SELECT id, first_name, last_name, email, password, is_verified,(SELECT value FROM user_roles WHERE user_roles.id=users.user_role) as role FROM users WHERE email=$1', [email]);
+        const result = await db.query('SELECT id, first_name, last_name, email, password, profile_picture, phone, is_verified,(SELECT value FROM user_roles WHERE user_roles.id=users.user_role) as role FROM users WHERE email=$1', [email]);
+        if(result.rows) {
+            return result.rows[0];
+        }
+        return null;
+    } catch(e) {
+        console.error('Error user finding:', e.message, e.stack);
+        throw new Error('Error user finding', e);
+    }
+}
+
+async function getUserDataById(id) {
+    try {
+        const result = await db.query('SELECT id, first_name, last_name, email, password, profile_picture, phone, is_verified,(SELECT value FROM user_roles WHERE user_roles.id=users.user_role) as role FROM users WHERE id=$1', [id]);
         if(result.rows) {
             return result.rows[0];
         }

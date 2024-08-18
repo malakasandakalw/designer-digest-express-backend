@@ -11,13 +11,13 @@ const postsRoutes = require("./posts-routes")
 const fileManagerRoutes = require("./file-manager-routes")
 const BodyParser = require("../middlewares/BodyParser")
 
-router.use("/users", BodyParser, userRoutes);
-router.use("/designers", BodyParser, designerRoutes);
-router.use("/personal", BodyParser, personalRoutes);
-router.use("/category", BodyParser, categoryRoutes);
-router.use("/designer-category", BodyParser, designerCategoryRoutes);
-router.use("/locations", BodyParser, locationsRoutes);
-router.use("/posts", BodyParser, postsRoutes);
-router.use("/file-manager", BodyParser, fileManagerRoutes)
+router.use("/users", userRoutes);
+router.use("/designers", designerRoutes);
+router.use("/personal", personalRoutes);
+router.use("/category", categoryRoutes);
+router.use("/designer-category", designerCategoryRoutes);
+router.use("/locations", locationsRoutes);
+router.use("/posts", postsRoutes);
+router.use("/file-manager", fileManagerRoutes)
 
 module.exports = router;

@@ -29,6 +29,19 @@ assignCategoryForDesigner = async (categories, designerId) => {
     }
 }
 
+updateProfileData = async (userId, first_name, last_name, profile_picture, phone) => {
+    try {
+        const result = await db.query("UPDATE users SET first_name=$2, last_name=$3, profile_picture=$4, phone=$5 WHERE users.id=$1", [userId, first_name, last_name, profile_picture, phone])
+        if (result) {
+            return true
+        }
+        return false
+    } catch (error) {
+        console.error('Error when profile:', e.message, e.stack);
+        throw new Error('Error when profile', e);        
+    }
+}
+
 updateUserRoleToDesigner = async (userId) => {
     try {
         const result = await db.query("UPDATE users SET user_role=(SELECT id FROM user_roles WHERE key='DESIGNER') WHERE users.id=$1", [userId])
@@ -42,9 +55,35 @@ updateUserRoleToDesigner = async (userId) => {
     }
 }
 
+updateUserRoleToEmployer = async (userId) => {
+    try {
+        const result = await db.query("UPDATE users SET user_role=(SELECT id FROM user_roles WHERE key='EMPLOYER') WHERE users.id=$1", [userId])
+        if (result) {
+            return true
+        }
+        return false
+    } catch (error) {
+        console.error('Error when updating role to employer:', e.message, e.stack);
+        throw new Error('Error when updating role to employer', e);
+    }
+}
+
+exports.updateProfile = async (userId, first_name, last_name, profile_picture, phone) => {
+    if (userId.toString().trim() === '' || !first_name.length || !last_name.length || first_name.toString().trim() === '' || last_name.toString().trim() === '') return false;
+
+    try {
+        const result = await updateProfileData(userId, first_name, last_name, profile_picture, phone)
+        return result;
+    } catch (error) {
+        console.error('Error when updating:', e.message, e.stack);
+        throw new Error('Error when updating', e);
+    }
+
+}
+
 exports.convertToDesigner = async (userId, locationId, categories) => {
 
-    if (userId.toString().trim() === '' || locationId.toString().trim() === '' || !categories.length) return;
+    if (userId.toString().trim() === '' || locationId.toString().trim() === '' || !categories.length) return false;
 
     try {
         const designerId = await createDesignerAccount(userId, locationId)
@@ -57,11 +96,19 @@ exports.convertToDesigner = async (userId, locationId, categories) => {
             return false
         }
         return false
-        // const result = await db.query("SELECT * FROM users WHERE email=$1", [email])
-        // if(result.rows.length) {
-        //     return true;
-        // }
-        // return false;
+    } catch (e) {
+        console.error('Error when converting:', e.message, e.stack);
+        throw new Error('Error when converting', e);
+    }
+}
+
+exports.convertToEmployer = async (userId) => {
+
+    if (userId.toString().trim() === '') return false;
+
+    try {
+        const updateUser = await updateUserRoleToEmployer(userId)
+        return updateUser
     } catch (e) {
         console.error('Error when converting:', e.message, e.stack);
         throw new Error('Error when converting', e);
