@@ -2,8 +2,15 @@ const userService = require("../services/user-service");
 const jwt = require('jsonwebtoken');
 const secretKey = 'backend_secret_key';
 
-exports.getAllUsers = (req, res) => {
-
+exports.getAllUsers = async (req, res) => {
+    try {
+        const result = await userService.getAllUsers()
+        if(result) return res.status(200).json({ message: 'Users fetching success', body: result, status: 'success' });
+        return res.status(200).json({ message: 'Users fetching failed', body: [], status: 'error' });
+    } catch (e) {
+        console.error('error in get all users function', e);
+        res.status(200).json({ message: 'Internal server error', e, status: 'error'  });
+    }
 };
 
 exports.getUserByEmail = async (req, res) => {

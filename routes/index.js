@@ -9,7 +9,7 @@ const personalRoutes = require("./personal-routes")
 const locationsRoutes = require("./locations-router")
 const postsRoutes = require("./posts-routes")
 const fileManagerRoutes = require("./file-manager-routes")
-const BodyParser = require("../middlewares/BodyParser")
+const chatsRoutes = require("./chats-routes")
 
 router.use("/users", userRoutes);
 router.use("/designers", designerRoutes);
@@ -19,5 +19,6 @@ router.use("/designer-category", designerCategoryRoutes);
 router.use("/locations", locationsRoutes);
 router.use("/posts", postsRoutes);
 router.use("/file-manager", fileManagerRoutes)
+router.use("/chats", chatsRoutes)
 
 module.exports = router;

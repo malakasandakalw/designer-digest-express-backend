@@ -7,6 +7,7 @@ const UserSignUpAlreadyExists = require("../middlewares/UserSignUpAlreadyExists"
 const UserLoginExists = require("../middlewares/UserLoginExists");
 const TokenAuthenticator = require('../middlewares/TokenAuthenticator');
 
+router.get("/get-all-users", userController.getAllUsers);
 router.get("/", userController.getUserByEmail);
 router.post("/verify", TokenAuthenticator, userController.verify);
 router.post("/signup", UserSignUpRequestValidate, UserSignUpAlreadyExists, userController.createUser);

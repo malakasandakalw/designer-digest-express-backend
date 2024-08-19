@@ -1,6 +1,18 @@
 const db = require("../db-connector");
 const { hashPassword, comparePassword } = require("../utils/password-process");
 
+exports.getAllUsers = async() => {
+    try {
+        const result = await db.query("SELECT id, first_name, last_name, email, (SELECT value FROM user_roles WHERE id=users.user_role) as role, profile_picture FROM users ORDER BY first_name")
+        if(result.rows) {
+            return result.rows;
+        }
+    } catch (e) {
+        console.error('Error when getting users:', e.message, e.stack);
+        throw new Error('Error when getting users', e);
+    }
+}
+
 exports.checkUserAvailable = async (email) => {
     try {
         const result = await db.query("SELECT * FROM users WHERE email=$1", [email])

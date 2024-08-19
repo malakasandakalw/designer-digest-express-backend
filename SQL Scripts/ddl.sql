@@ -181,3 +181,28 @@ CREATE TABLE
 ALTER TABLE designer_assigned_categories ADD CONSTRAINT designer_assigned_categories_category_id_fk FOREIGN KEY (category_id) REFERENCES designer_categories;
 
 ALTER TABLE designer_assigned_categories ADD CONSTRAINT designer_assigned_categories_designer_id_fk FOREIGN KEY (designer_id) REFERENCES designers;
+
+
+
+-- messages
+CREATE TABLE messages(
+    id UUID DEFAULT uuid_generate_v4 () NOT NULL,
+    type VARCHAR(10) NOT NULL,
+    message TEXT,
+    file_url TEXT,
+    from_user UUID NOT NULL,
+    to_user UUID NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+ALTER TABLE messages ADD CONSTRAINT messages_pk PRIMARY KEY (id);
+ALTER TABLE messages ADD CONSTRAINT from_user_id_fk FOREIGN KEY (from_user) REFERENCES users;
+ALTER TABLE messages ADD CONSTRAINT to_user_id_fk FOREIGN KEY (to_user) REFERENCES users;
+
+
+CREATE TABLE users_sockets (
+    user_id UUID NOT NULL,
+    socket_id VARCHAR(255) NOT NULL,
+    PRIMARY KEY (user_id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);

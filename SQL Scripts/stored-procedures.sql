@@ -82,6 +82,7 @@ DECLARE
     v_designer_id UUID;
     v_category_ids UUID[];
     v_offset INT;
+    v_limit INT;
 BEGIN
     -- Find designer ID based on the provided user ID
     SELECT id INTO v_designer_id FROM designers WHERE user_id = p_user_id;
@@ -98,6 +99,7 @@ BEGIN
 
     -- Calculate the offset for pagination
     v_offset := (p_page_index - 1) * p_page_size;
+    v_limit := p_page_size;
 
     -- Perform the query to get the posts by designer
     RETURN QUERY
@@ -153,14 +155,12 @@ BEGIN
     GROUP BY
         p.id, tc.total
     ORDER BY
-        CASE
-            WHEN p_order_by = 'most_voted' THEN COUNT(DISTINCT pu.voted_by)
-            ELSE NULL
-        END DESC,
-        CASE
-            WHEN p_order_by = 'oldest' THEN p.created_at
-            ELSE p.created_at
-        END ASC
-    LIMIT p_page_size OFFSET v_offset;
+        CASE 
+            WHEN p_order_by = 'most_voted' THEN COUNT(DISTINCT pu.voted_by) END DESC,
+		CASE
+			WHEN p_order_by = 'recent' THEN p.created_at END DESC,
+		CASE
+			WHEN p_order_by = 'oldest' THEN p.created_at END ASC
+    LIMIT v_limit OFFSET v_offset;
 END;
 $$ LANGUAGE plpgsql;
