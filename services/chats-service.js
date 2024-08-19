@@ -44,7 +44,7 @@ exports.getAllByDesigner = async (userId) => {
 
 exports.getSingleChat = async (senderId, receiverId) => {
     try {
-        const result = await db.query("SELECT * FROM messages")
+        const result = await db.query("SELECT * FROM messages WHERE from_user IN ($1::UUID,$2::UUID) AND to_user IN ($1::UUID,$2::UUID) ORDER BY created_at ASC",[senderId, receiverId])
         if (result.rows.length) {
             return result.rows;
         }

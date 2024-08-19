@@ -11,7 +11,21 @@ exports.getAllUsers = async (req, res) => {
         console.error('error in get all users function', e);
         res.status(200).json({ message: 'Internal server error', e, status: 'error'  });
     }
-};
+}
+
+exports.getById = async (req, res) => {
+    try {
+        const id = req.query.receiverId
+        if(!id) return res.status(200).json({ message: 'Data error', body: [], status: 'error' });
+
+        const result = await userService.getUserbyId(id)
+        if(result) return res.status(200).json({ message: 'User fetching success', body: result, status: 'success' });
+        return res.status(200).json({ message: 'User fetching failed', body: [], status: 'error' });
+    } catch (e) {
+        console.error('error in get user by id function', e);
+        res.status(200).json({ message: 'Internal server error', e, status: 'error'  });        
+    }
+}
 
 exports.getUserByEmail = async (req, res) => {
     try {
