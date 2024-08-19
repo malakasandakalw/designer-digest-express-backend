@@ -31,7 +31,13 @@ exports.getByDesigner = async (req, res) => {
         const userId = req.user.id;
         if(!userId) return res.status(200).json({ message: 'Posts getting failed. Try again later!', body: {}, status: 'error' });
 
-        const result = await postsService.getByDesigner(userId)
+        const categories = req.query.categories
+        const orderBy = req.query.order_by
+        const search = req.query.search
+        const pageIndex = req.query.page_index
+        const pageSize = req.query.page_size
+
+        const result = await postsService.getByDesigner(userId, categories, orderBy, search, pageIndex, pageSize)
 
         return res.status(200).json({ message: 'Post fetched successfully', body: {result}, status: 'success' });
 
@@ -40,4 +46,19 @@ exports.getByDesigner = async (req, res) => {
         res.status(200).json({ message: 'Internal server error', e, status: 'error'  });
     }
 
+}
+
+exports.getById = async (req, res) => {
+    try {
+        const postId = req.query.post_id;
+        if(!postId) return res.status(200).json({ message: 'Post getting failed. Try again later!', body: {}, status: 'error' });
+
+        const result = await postsService.getById(postId)
+
+        return res.status(200).json({ message: 'Post fetched successfully', body: {result}, status: 'success' });
+
+    } catch (e) {
+        console.error('error in create user function', e);
+        res.status(200).json({ message: 'Internal server error', e, status: 'error'  });
+    }
 }
