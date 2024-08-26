@@ -10,3 +10,15 @@ exports.checkUserAvailable = async (id) => {
         throw new Error('Error when checking DESIGNER aacounts', e);
     }
 }
+
+exports.getAllDesigners = async() => {
+    try {
+        const result = await db.query("SELECT id, first_name, last_name, email, (SELECT value FROM user_roles WHERE id=users.user_role) as role, profile_picture FROM users WHERE user_role=(SELECT id FROM user_roles WHERE key='DESIGNER') ORDER BY first_name")
+        if(result.rows) {
+            return result.rows;
+        }
+    } catch (e) {
+        console.error('Error when getting users:', e.message, e.stack);
+        throw new Error('Error when getting users', e);
+    }
+}

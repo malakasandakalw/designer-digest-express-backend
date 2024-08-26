@@ -192,6 +192,7 @@ CREATE TABLE messages(
     file_url TEXT,
     from_user UUID NOT NULL,
     to_user UUID NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 

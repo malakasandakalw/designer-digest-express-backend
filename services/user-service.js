@@ -66,7 +66,8 @@ exports.getUserbyId = async (userId) => {
             is_verified: user.is_verified,
             profile_picture: user.profile_picture,
             role: user.role,
-            phone: user.phone
+            phone: user.phone,
+            email: user.email
         }
         return data;
     } else {
