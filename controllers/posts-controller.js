@@ -26,6 +26,30 @@ exports.createPost = async (req, res) => {
 
 }
 
+exports.getPosts = async (req, res) => {
+    try {
+        const categories = req.query.categories
+        const orderBy = req.query.order_by
+        const search = req.query.search
+        const pageIndex = req.query.page_index
+        const pageSize = req.query.page_size
+        const userId = req.query.userId
+
+        if(userId) {
+            const result = await postsService.getPosts(userId, categories, orderBy, search, pageIndex, pageSize)
+            return res.status(200).json({ message: 'Post fetched successfully', body: {result}, status: 'success' });
+
+        } else {
+            const result = await postsService.getPublicPosts(categories, orderBy, search, pageIndex, pageSize)
+            return res.status(200).json({ message: 'Post fetched successfully', body: {result}, status: 'success' });
+        }
+
+    } catch (e) {
+        console.error('error in get posts function', e);
+        res.status(200).json({ message: 'Internal server error', e, status: 'error'  });
+    }
+}
+
 exports.getByDesigner = async (req, res) => {
     try {
         const userId = req.user.id;

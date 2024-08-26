@@ -1,5 +1,45 @@
 const db = require("../db-connector");
 
+exports.getPosts = async (userId, categories, orderBy, search, pageIndex, pageSize) => {
+    try {
+        const query = `SELECT * FROM get_posts($1, $2, $3, $4, $5, $6)`;
+        const result = await db.query(query, [userId ,categories, orderBy, search, pageIndex, pageSize]);
+
+        if (result.rows.length === 0) {
+            return { posts: [], total: 0 };
+        }
+
+        return {
+            posts: result.rows,
+            total: result.rows[0].total
+        };
+
+    } catch (e) {
+        console.error('Error when getting posts', e.message, e.stack);
+        throw new Error('Error when getting posts', e);
+    }
+};
+
+exports.getPublicPosts = async (categories, orderBy, search, pageIndex, pageSize) => {
+    try {
+        const query = `SELECT * FROM get_public_posts($1, $2, $3, $4, $5)`;
+        const result = await db.query(query, [categories, orderBy, search, pageIndex, pageSize]);
+
+        if (result.rows.length === 0) {
+            return { posts: [], total: 0 };
+        }
+
+        return {
+            posts: result.rows,
+            total: result.rows[0].total
+        };
+
+    } catch (e) {
+        console.error('Error when getting posts', e.message, e.stack);
+        throw new Error('Error when getting posts', e);
+    }
+};
+
 exports.getByDesigner = async (userId, categories, orderBy, search, pageIndex, pageSize) => {
     try {
         const query = `SELECT * FROM get_posts_by_designer($1, $2, $3, $4, $5, $6)`;

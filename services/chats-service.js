@@ -41,7 +41,7 @@ exports.getSocketIds = async (fromId, toId) => {
 
 exports.getAllByDesigner = async (userId) => {
     try {
-        const result = await db.query("SELECT * FROM categories")
+        const result = await db.query("SELECT * FROM get_user_chats($1)", [userId])
         if (result.rows.length) {
             return result.rows;
         }
