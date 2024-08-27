@@ -26,6 +26,27 @@ exports.createPost = async (req, res) => {
 
 }
 
+exports.upvote = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        if(!userId) return res.status(200).json({ message: 'User not found', body: {}, status: 'error' });
+
+        const {post_id} = req.body
+        if(!post_id) return res.status(200).json({ message: 'Post not found', body: {}, status: 'error' });
+
+        const postupvoted = await postsService.upvote(post_id, userId)
+
+        if(!postupvoted) return res.status(200).json({ message: 'Post upvote error', body: {}, status: 'error' });
+
+        return res.status(200).json({ message: 'Post upvote successfully', body: {postupvoted}, status: 'success' });
+
+
+    } catch (e) {
+        console.error('error in upvote function', e);
+        res.status(200).json({ message: 'Internal server error', e, status: 'error'  });        
+    }
+}
+
 exports.getPosts = async (req, res) => {
     try {
         const categories = req.query.categories
@@ -78,6 +99,23 @@ exports.getById = async (req, res) => {
         if(!postId) return res.status(200).json({ message: 'Post getting failed. Try again later!', body: {}, status: 'error' });
 
         const result = await postsService.getById(postId)
+
+        return res.status(200).json({ message: 'Post fetched successfully', body: {result}, status: 'success' });
+
+    } catch (e) {
+        console.error('error in create user function', e);
+        res.status(200).json({ message: 'Internal server error', e, status: 'error'  });
+    }
+}
+
+exports.getFullById = async (req, res) => {
+    try {
+        const postId = req.query.post_id;
+        if(!postId) return res.status(200).json({ message: 'Post getting failed. Try again later!', body: {}, status: 'error' });
+
+        const userId = req.query.user_id ? req.query.user_id : null;
+
+        const result = await postsService.getFullById(postId, userId)
 
         return res.status(200).json({ message: 'Post fetched successfully', body: {result}, status: 'success' });
 

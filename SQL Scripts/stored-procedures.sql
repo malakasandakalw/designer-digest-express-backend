@@ -404,3 +404,67 @@ BEGIN
     LIMIT v_limit OFFSET v_offset;
 END;
 $$ LANGUAGE plpgsql;
+
+
+
+
+CREATE OR REPLACE FUNCTION get_full_post_by_id(p_id UUID, p_user_id UUID)
+RETURNS TABLE (
+    post_id UUID,
+    title TEXT,
+    description TEXT,
+    created_at TIMESTAMPTZ,
+    created_by JSONB,
+    media JSONB,
+    thumbnail JSONB,
+    categories JSONB,
+    upvote_count INT,
+    user_has_voted BOOLEAN
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        p.id AS post_id,
+        p.title,
+        p.description,
+        p.created_at,
+        jsonb_build_object(
+            'id', p.created_by,
+            'first_name', (SELECT first_name FROM users WHERE id=(SELECT user_id FROM designers WHERE id=p.created_by)),
+            'last_name', (SELECT last_name FROM users WHERE id=(SELECT user_id FROM designers WHERE id=p.created_by)),
+            'profile_picture', (SELECT profile_picture FROM users WHERE id=(SELECT user_id FROM designers WHERE id=p.created_by)),
+			'email', (SELECT email FROM users WHERE id=(SELECT user_id FROM designers WHERE id=p.created_by))
+        ) AS created_by,
+        COALESCE(jsonb_agg(DISTINCT jsonb_build_object(
+            'type', pm.type,
+            'media_url', pm.media_url,
+            'is_thumbnail', pm.is_thumbnail
+        )) FILTER (WHERE pm.media_url IS NOT NULL), '[]'::jsonb) AS media,
+        jsonb_build_object(
+            'type', pt.type,
+            'media_url', pt.media_url
+        ) AS thumbnail,
+        COALESCE(jsonb_agg(DISTINCT jsonb_build_object(
+            'id', c.id,
+            'name', c.name
+        )) FILTER (WHERE c.id IS NOT NULL), '[]'::jsonb) AS categories,
+        COUNT(DISTINCT pu.voted_by)::int AS upvote_count,
+        EXISTS (SELECT 1 FROM post_upvotes pu WHERE pu.post_id = p.id AND pu.voted_by = p_user_id)::boolean AS user_has_voted
+    FROM
+        posts p
+    LEFT JOIN
+        post_media pm ON p.id = pm.post_id
+    LEFT JOIN
+        post_media pt ON p.id = pt.post_id AND pt.is_thumbnail = true
+    LEFT JOIN
+        post_categories pc ON p.id = pc.post_id
+    LEFT JOIN
+        categories c ON pc.category_id = c.id
+    LEFT JOIN
+        post_upvotes pu ON p.id = pu.post_id
+    WHERE
+        p.id = p_id
+    GROUP BY
+        p.id, pt.type, pt.media_url;
+END;
+$$ LANGUAGE plpgsql;

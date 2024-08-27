@@ -102,6 +102,44 @@ exports.getById = async (postId) => {
     }
 }
 
+exports.getFullById = async (postId, userId) => {
+    try {
+        const result = await db.query(`SELECT * FROM get_full_post_by_id($1, $2)`, [postId, userId])
+        if (result.rows.length) {
+            return result.rows[0];
+        }
+    } catch (e) {
+        console.error('Error when getting post:', e.message, e.stack);
+        throw new Error('Error when getting post', e);
+    }
+}
+
+exports.upvote = async(postId, userId) => {
+    try {
+
+        const isRecordAvailable = await db.query("SELECT * FROM post_upvotes WHERE post_id=$1 AND voted_by=$2", [postId, userId])
+
+        if(isRecordAvailable.rows.length) {
+            const result = await db.query("DELETE FROM post_upvotes WHERE post_id=$1 AND voted_by=$2", [postId, userId])
+            if(result) {
+                return {voted: false, post_id: postId, user_id: userId}
+            }
+            return null
+        } else {
+
+            const result = await db.query("INSERT INTO post_upvotes(post_id, voted_by) VALUES ($1, $2)", [postId, userId])
+            if (result.rows) {
+                return {voted: true, post_id: postId, user_id: userId}
+            }
+            return null
+
+        }
+    } catch (e) {
+        console.error('Error when upvoting:', e.message, e.stack);
+        throw new Error('Error when upvoting', e)
+    }
+}
+
 exports.createPost = async (title, description, userId) => {
     try {
         const result = await db.query("INSERT INTO posts(title, description, created_by) VALUES ($1, $2, (SELECT id FROM designers WHERE user_id=$3)) returning posts.id", [title, description, userId])

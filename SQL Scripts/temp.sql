@@ -1,20 +1,53 @@
-SELECT 
-    p.id AS post_id, p.title, p.description, p.created_at, p.created_by, 
-    json_agg( json_build_object( 'type', pm.type, 'media_url', pm.media_url, 'is_thumbnail', pm.is_thumbnail ) ) FILTER (WHERE pm.is_thumbnail = false) AS media, json_build_object( 'type', pt.type, 'media_url', pt.media_url ) AS thumbnail, 
-    json_agg( json_build_object( 'id', c.id, 'name', c.name ) ) AS categories, 
-    COUNT(DISTINCT pu.voted_by) AS upvote_count FROM posts p 
-    LEFT JOIN post_media pm ON p.id = pm.post_id AND pm.is_thumbnail = false 
-    LEFT JOIN post_media pt ON p.id = pt.post_id AND  pt.is_thumbnail = true 
-    LEFT JOIN post_categories pc ON p.id = pc.post_id 
-    LEFT JOIN categories c ON pc.category_id = c.id 
-    LEFT JOIN post_upvotes pu ON p.id = pu.post_id 
-    WHERE p.created_by = (SELECT id FROM designers WHERE user_id = $1) AND c.id = ANY($3::uuid[]) 
-    GROUP BY p.id, p.title, p.description, p.created_at, p.created_by, pt.type, pt.media_url ORDER BY p.created_at DESC LIMIT $4 OFFSET $5
-
-userId = '58b30fe8-efc5-4761-a646-3917a2eddba9'
-categories = '6512f44e-db27-40c9-9142-7f0920308897'
-orderBy = 'recent'
-search = ''
-pageIndex = '1'
-pageSize = '2'
-
+CREATE OR REPLACE FUNCTION get_user_chats(from_user_id UUID)
+RETURNS TABLE(
+    user_id UUID,
+    user_name VARCHAR,
+    user_avatar TEXT,
+    latest_message TEXT,
+    unread_messages_count INT
+) AS $$
+BEGIN
+    RETURN QUERY
+    WITH LastMessages AS (
+        SELECT
+            m.from_user,
+            m.to_user,
+            m.message AS latest_message,
+            m.created_at,
+            ROW_NUMBER() OVER (PARTITION BY LEAST(m.from_user, m.to_user), GREATEST(m.from_user, m.to_user) ORDER BY m.created_at DESC) AS rn
+        FROM
+            messages m
+        WHERE
+            m.to_user = from_user_id OR m.from_user = from_user_id
+    ),
+    UnreadCounts AS (
+        SELECT
+            CASE
+                WHEN from_user = from_user_id THEN to_user
+                ELSE from_user
+            END AS other_user,
+            COUNT(*) AS unread_count
+        FROM
+            messages
+        WHERE
+            is_read = FALSE
+            AND (to_user = from_user_id OR from_user = from_user_id)
+        GROUP BY
+            other_user
+    )
+    SELECT
+        u.id AS user_id,
+        u.username AS user_name,
+        u.avatar AS user_avatar,
+        lm.latest_message,
+        COALESCE(uc.unread_count, 0) AS unread_messages_count
+    FROM
+        users u
+    JOIN
+        LastMessages lm ON u.id = CASE WHEN lm.from_user = from_user_id THEN lm.to_user ELSE lm.from_user END
+    LEFT JOIN
+        UnreadCounts uc ON uc.other_user = u.id
+    WHERE
+        lm.rn = 1;
+END; $$
+LANGUAGE plpgsql;
