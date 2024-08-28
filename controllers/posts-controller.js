@@ -93,6 +93,28 @@ exports.getByDesigner = async (req, res) => {
 
 }
 
+exports.getByDesignerId = async (req, res) => {
+    try {
+        const designer_id = req.query.designer_id
+        const categories = req.query.categories
+        const orderBy = req.query.order_by
+        const search = req.query.search
+        const pageIndex = req.query.page_index
+        const pageSize = req.query.page_size
+
+        const userId = req.query.user_id ? req.query.user_id : null;
+
+        const result = await postsService.getByDesignerId(designer_id, categories, orderBy, search, pageIndex, pageSize, userId)
+
+        return res.status(200).json({ message: 'Post fetched successfully', body: {result}, status: 'success' });
+
+    } catch (e) {
+        console.error('error in create user function', e);
+        res.status(200).json({ message: 'Internal server error', e, status: 'error'  });
+    }
+
+}
+
 exports.getById = async (req, res) => {
     try {
         const postId = req.query.post_id;

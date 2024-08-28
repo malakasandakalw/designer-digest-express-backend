@@ -9,6 +9,7 @@ router.post("/create", TokenAuthenticator, IsDesignerValidator, postsController.
 router.post("/upvote", TokenAuthenticator, postsController.upvote)
 router.get("/get-posts", postsController.getPosts)
 router.get("/get-by-designer", TokenAuthenticator, IsDesignerValidator, postsController.getByDesigner)
+router.get("/get-by-designer-id", postsController.getByDesignerId)
 router.get("/get-by-id", TokenAuthenticator, IsDesignerValidator, postsController.getById)
 router.get("/get-full-by-id", postsController.getFullById)
 

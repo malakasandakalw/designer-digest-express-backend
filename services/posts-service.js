@@ -60,6 +60,26 @@ exports.getByDesigner = async (userId, categories, orderBy, search, pageIndex, p
     }
 };
 
+exports.getByDesignerId = async (designer_id, categories, orderBy, search, pageIndex, pageSize, userId) => {
+    try {
+        const query = `SELECT * FROM get_posts_by_designer_id($1, $2, $3, $4, $5, $6, $7)`;
+        const result = await db.query(query, [userId, designer_id, categories, orderBy, search, pageIndex, pageSize]);
+
+        if (result.rows.length === 0) {
+            return { posts: [], total: 0 };
+        }
+
+        return {
+            posts: result.rows,
+            total: result.rows[0].total
+        };
+
+    } catch (e) {
+        console.error('Error when getting posts by designer:', e.message, e.stack);
+        throw new Error('Error when getting posts by designer', e);
+    }
+};
+
 async function removeDuplicates(posts) {
     return posts.map(post => {
         const uniqueMedia = post.media.reduce((acc, current) => {

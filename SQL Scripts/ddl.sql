@@ -182,7 +182,14 @@ ALTER TABLE designer_assigned_categories ADD CONSTRAINT designer_assigned_catego
 
 ALTER TABLE designer_assigned_categories ADD CONSTRAINT designer_assigned_categories_designer_id_fk FOREIGN KEY (designer_id) REFERENCES designers;
 
+-- followers
+CREATE TABLE followings(
+    user_id UUID NOT NULL,
+    designer_id UUID NOT NULL
+);
 
+ALTER TABLE followings ADD CONSTRAINT followings_user_id_fk FOREIGN KEY (user_id) REFERENCES users;
+ALTER TABLE followings ADD CONSTRAINT followings_designer_id_fk FOREIGN KEY (designer_id) REFERENCES designers;
 
 -- messages
 CREATE TABLE messages(
