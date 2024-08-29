@@ -214,3 +214,52 @@ CREATE TABLE users_sockets (
     PRIMARY KEY (user_id),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+
+-- vacancies
+CREATE TABLE vacancies(
+    id UUID DEFAULT uuid_generate_v4 () NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    application_url TEXT,
+    is_active BOOLEAN DEFAULT FALSE,
+    created_by UUID NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+ALTER TABLE vacancies ADD CONSTRAINT vacancies_pk PRIMARY KEY (id);
+ALTER TABLE vacancies ADD CONSTRAINT created_by_vacancies_fk FOREIGN KEY (created_by) REFERENCES users;
+
+CREATE TABLE vacancy_categories(
+    designer_category_id UUID NOT NULL,
+    vacancy_id UUID NOT NULL
+);
+
+ALTER TABLE vacancy_categories ADD CONSTRAINT vacancy_categories_designer_category_id_fk FOREIGN KEY (designer_category_id) REFERENCES designer_categories;
+ALTER TABLE vacancy_categories ADD CONSTRAINT vacancy_categories_vacancy_id_fk FOREIGN KEY (vacancy_id) REFERENCES vacancies;
+
+CREATE TABLE vacancy_locations(
+    location_id UUID NOT NULL,
+    vacancy_id UUID NOT NULL
+);
+
+ALTER TABLE vacancy_locations ADD CONSTRAINT vacancy_locations_location_id_fk FOREIGN KEY (location_id) REFERENCES locations;
+ALTER TABLE vacancy_locations ADD CONSTRAINT vacancy_locations_vacancy_id_fk FOREIGN KEY (vacancy_id) REFERENCES vacancies;
+
+-- applications
+CREATE TABLE applications(
+    id UUID DEFAULT uuid_generate_v4 () NOT NULL,
+    applicant_id UUID NOT NULL,
+    vacancy_id UUID NOT NULL,
+    resume_url TEXT,
+    applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+ALTER TABLE applications ADD CONSTRAINT applications_pk PRIMARY KEY (id);
+ALTER TABLE applications ADD CONSTRAINT applicant_id_applications_fk FOREIGN KEY (applicant_id) REFERENCES users;
+ALTER TABLE applications ADD CONSTRAINT vacancy_id_applications_fk FOREIGN KEY (vacancy_id) REFERENCES vacancies;
+
+
+-- Add created at columns
+ALTER TABLE followings ADD COLUMN created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL;
+ALTER TABLE post_upvotes ADD COLUMN created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL;

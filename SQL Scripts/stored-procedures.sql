@@ -826,3 +826,251 @@ BEGIN
         d.id, u.id, u.first_name, u.last_name, u.email, u.phone, u.profile_picture;
 END;
 $$ LANGUAGE plpgsql;
+
+
+
+
+
+
+
+
+
+
+CREATE OR REPLACE FUNCTION get_vacancies_by_employer_id(
+    p_user_id UUID,
+    p_categories TEXT DEFAULT NULL,
+    p_locations TEXT DEFAULT NULL,
+    p_is_active BOOLEAN DEFAULT NULL,
+    p_search TEXT DEFAULT NULL,
+    p_page_index INT DEFAULT 1,
+    p_page_size INT DEFAULT 10
+)
+RETURNS TABLE (
+    vacancy_id UUID,
+    title TEXT,
+    description TEXT,
+    application_url TEXT,
+    is_active BOOLEAN,
+    created_at TIMESTAMPTZ,
+    created_by JSONB,
+    categories JSONB,
+    locations JSONB,
+    total INT
+) AS $$
+DECLARE
+    v_category_ids UUID[];
+    v_location_ids UUID[];
+    v_offset INT;
+    v_limit INT;
+BEGIN
+    -- Convert category and location lists to arrays of UUIDs if provided
+    IF p_categories IS NOT NULL AND p_categories <> '' THEN
+        v_category_ids := string_to_array(p_categories, ',')::uuid[];
+    ELSE
+        v_category_ids := NULL;
+    END IF;
+
+    IF p_locations IS NOT NULL AND p_locations <> '' THEN
+        v_location_ids := string_to_array(p_locations, ',')::uuid[];
+    ELSE
+        v_location_ids := NULL;
+    END IF;
+
+    -- Calculate the offset for pagination
+    v_offset := (p_page_index - 1) * p_page_size;
+    v_limit := p_page_size;
+
+    RETURN QUERY
+    WITH total_count AS (
+        SELECT COUNT(DISTINCT v.id) AS total
+        FROM vacancies v
+        LEFT JOIN vacancy_categories vc ON v.id = vc.vacancy_id
+        LEFT JOIN vacancy_locations vl ON v.id = vl.vacancy_id
+        WHERE (p_is_active IS NULL OR p_is_active = FALSE OR v.is_active = p_is_active)
+        AND (v_category_ids IS NULL OR vc.designer_category_id = ANY(v_category_ids))
+        AND (v_location_ids IS NULL OR vl.location_id = ANY(v_location_ids))
+        AND (p_search IS NULL OR p_search = '' OR (v.title ILIKE '%' || p_search || '%' OR v.description ILIKE '%' || p_search || '%'))
+    )
+    SELECT
+        v.id AS vacancy_id,
+        v.title::TEXT,
+        v.description::TEXT,
+        v.application_url::TEXT,
+        v.is_active,
+        v.created_at,
+        jsonb_build_object(
+            'id', v.created_by,
+            'first_name', u.first_name,
+            'last_name', u.last_name,
+            'email', u.email,
+            'phone', u.phone,
+            'profile_picture', u.profile_picture
+        ) AS created_by,
+        COALESCE(jsonb_agg(DISTINCT jsonb_build_object(
+            'id', dc.id,
+            'name', dc.name
+        )) FILTER (WHERE vc.designer_category_id IS NOT NULL), '[]'::jsonb) AS categories,
+        COALESCE(jsonb_agg(DISTINCT jsonb_build_object(
+            'id', l.id,
+            'name', l.name
+        )) FILTER (WHERE vl.location_id IS NOT NULL), '[]'::jsonb) AS locations,
+        tc.total::int AS total
+    FROM
+        vacancies v
+    JOIN
+        users u ON v.created_by = u.id
+    LEFT JOIN
+        vacancy_categories vc ON v.id = vc.vacancy_id
+    LEFT JOIN
+        designer_categories dc ON vc.designer_category_id = dc.id
+    LEFT JOIN
+        vacancy_locations vl ON v.id = vl.vacancy_id
+    LEFT JOIN
+        locations l ON vl.location_id = l.id
+    CROSS JOIN
+        total_count tc
+    WHERE
+        (p_is_active IS NULL OR p_is_active = FALSE OR v.is_active = p_is_active)
+        AND (v_category_ids IS NULL OR vc.designer_category_id = ANY(v_category_ids))
+        AND (v_location_ids IS NULL OR vl.location_id = ANY(v_location_ids))
+        AND (p_search IS NULL OR p_search = '' OR (v.title ILIKE '%' || p_search || '%' OR v.description ILIKE '%' || p_search || '%'))
+    GROUP BY
+        v.id, u.id, tc.total
+    ORDER BY
+        v.created_at DESC
+    LIMIT v_limit OFFSET v_offset;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+CREATE OR REPLACE FUNCTION get_full_vacancy_by_id(
+    p_vacancy_id UUID
+)
+RETURNS TABLE (
+    vacancy_id UUID,
+    title TEXT,
+    description TEXT,
+    application_url TEXT,
+    is_active BOOLEAN,
+    created_at TIMESTAMPTZ,
+    created_by JSONB,
+    categories JSONB,
+    locations JSONB,
+    applications JSONB
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        v.id AS vacancy_id,
+        v.title::TEXT,
+        v.description::TEXT,
+        v.application_url::TEXT,
+        v.is_active,
+        v.created_at,
+        jsonb_build_object(
+            'id', v.created_by,
+            'first_name', u.first_name,
+            'last_name', u.last_name,
+            'email', u.email,
+            'phone', u.phone,
+            'profile_picture', u.profile_picture
+        ) AS created_by,
+        COALESCE(jsonb_agg(DISTINCT jsonb_build_object(
+            'id', dc.id,
+            'name', dc.name
+        )) FILTER (WHERE vc.designer_category_id IS NOT NULL), '[]'::jsonb) AS categories,
+        COALESCE(jsonb_agg(DISTINCT jsonb_build_object(
+            'id', l.id,
+            'name', l.name
+        )) FILTER (WHERE vl.location_id IS NOT NULL), '[]'::jsonb) AS locations,
+        COALESCE(jsonb_agg(DISTINCT jsonb_build_object(
+            'application_id', a.id,
+            'applicant_id', a.applicant_id,
+            'applicant_first_name', au.first_name,
+            'applicant_last_name', au.last_name,
+            'applicant_email', au.email,
+            'resume_url', a.resume_url,
+            'applied_at', a.applied_at
+        )) FILTER (WHERE a.id IS NOT NULL), '[]'::jsonb) AS applications
+    FROM
+        vacancies v
+    JOIN
+        users u ON v.created_by = u.id
+    LEFT JOIN
+        vacancy_categories vc ON v.id = vc.vacancy_id
+    LEFT JOIN
+        designer_categories dc ON vc.designer_category_id = dc.id
+    LEFT JOIN
+        vacancy_locations vl ON v.id = vl.vacancy_id
+    LEFT JOIN
+        locations l ON vl.location_id = l.id
+    LEFT JOIN
+        applications a ON v.id = a.vacancy_id
+    LEFT JOIN
+        users au ON a.applicant_id = au.id
+    WHERE
+        v.id = p_vacancy_id
+    GROUP BY
+        v.id, u.id;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION get_vacancy_by_id(
+    p_vacancy_id UUID
+)
+RETURNS TABLE (
+    vacancy_id UUID,
+    title TEXT,
+    description TEXT,
+    application_url TEXT,
+    is_active BOOLEAN,
+    created_at TIMESTAMPTZ,
+    created_by JSONB,
+    categories JSONB,
+    locations JSONB
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        v.id AS vacancy_id,
+        v.title::TEXT,
+        v.description::TEXT,
+        v.application_url::TEXT,
+        v.is_active,
+        v.created_at,
+        jsonb_build_object(
+            'id', v.created_by,
+            'first_name', u.first_name,
+            'last_name', u.last_name,
+            'email', u.email,
+            'phone', u.phone,
+            'profile_picture', u.profile_picture
+        ) AS created_by,
+        COALESCE(jsonb_agg(DISTINCT jsonb_build_object(
+            'id', dc.id,
+            'name', dc.name
+        )) FILTER (WHERE vc.designer_category_id IS NOT NULL), '[]'::jsonb) AS categories,
+        COALESCE(jsonb_agg(DISTINCT jsonb_build_object(
+            'id', l.id,
+            'name', l.name
+        )) FILTER (WHERE vl.location_id IS NOT NULL), '[]'::jsonb) AS locations
+    FROM
+        vacancies v
+    JOIN
+        users u ON v.created_by = u.id
+    LEFT JOIN
+        vacancy_categories vc ON v.id = vc.vacancy_id
+    LEFT JOIN
+        designer_categories dc ON vc.designer_category_id = dc.id
+    LEFT JOIN
+        vacancy_locations vl ON v.id = vl.vacancy_id
+    LEFT JOIN
+        locations l ON vl.location_id = l.id
+    WHERE
+        v.id = p_vacancy_id
+    GROUP BY
+        v.id, u.id;
+END;
+$$ LANGUAGE plpgsql;

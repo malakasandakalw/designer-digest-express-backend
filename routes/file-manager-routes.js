@@ -25,9 +25,22 @@ router.post("/upload", (req, res) => {
             url: `/uploads/${fileName}`
         });
     });
-
     return res.status(200).json({ message: 'Uploaded Successfully', body: {files: filesUploaded}, status: 'success' });
+})
 
+router.post("/upload-vacancy-file", (req, res) => {
+    const file = req.body.file
+    let fileUploaded = {}
+
+    const base64Data = file.data.replace(/^data:.*;base64,/, '');
+    const fileName = Date.now() + '-' + file.name;
+    const filePath = path.join(__dirname, '../uploads/vacancy/', fileName);
+    fs.writeFileSync(filePath, base64Data, 'base64');
+    fileUploaded = {
+        name: file.name,
+        url: `/uploads/vacancy/${fileName}`
+    };
+    return res.status(200).json({ message: 'Uploaded Successfully', body: {file: fileUploaded}, status: 'success' });
 })
 
 function isImageFile(fileName) {
