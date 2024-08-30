@@ -45,7 +45,7 @@ BEGIN
     LEFT JOIN
         post_upvotes pu ON p.id = pu.post_id
     WHERE
-        p.id = p_id
+        p.id = p_id AND p.is_active IS TRUE
     GROUP BY
         p.id, pt.type, pt.media_url;
 END;
@@ -105,6 +105,7 @@ BEGIN
         LEFT JOIN post_categories pc ON p.id = pc.post_id
         LEFT JOIN categories c ON pc.category_id = c.id
         WHERE p.created_by = v_designer_id
+        AND p.is_active IS TRUE
         AND (v_category_ids IS NULL OR c.id = ANY(v_category_ids))
         AND (p_search IS NULL OR p_search = '' OR (p.title ILIKE '%' || p_search || '%' OR p.description ILIKE '%' || p_search || '%'))
     )
@@ -152,6 +153,7 @@ BEGIN
         total_count tc
     WHERE
         p.created_by = v_designer_id
+        AND p.is_active IS TRUE
         AND (v_category_ids IS NULL OR c.id = ANY(v_category_ids))
         AND (p_search IS NULL OR p_search = '' OR (p.title ILIKE '%' || p_search || '%' OR p.description ILIKE '%' || p_search || '%'))
     GROUP BY
@@ -211,6 +213,7 @@ BEGIN
         LEFT JOIN post_categories pc ON p.id = pc.post_id
         LEFT JOIN categories c ON pc.category_id = c.id
         WHERE p.created_by = p_designer_id
+        AND p.is_active IS TRUE
         AND (v_category_ids IS NULL OR c.id = ANY(v_category_ids))
         AND (p_search IS NULL OR p_search = '' OR (p.title ILIKE '%' || p_search || '%' OR p.description ILIKE '%' || p_search || '%'))
     )
@@ -259,6 +262,7 @@ BEGIN
         total_count tc
     WHERE
         p.created_by = p_designer_id
+        AND p.is_active IS TRUE
         AND (v_category_ids IS NULL OR c.id = ANY(v_category_ids))
         AND (p_search IS NULL OR p_search = '' OR (p.title ILIKE '%' || p_search || '%' OR p.description ILIKE '%' || p_search || '%'))
     GROUP BY
@@ -363,6 +367,7 @@ BEGIN
         LEFT JOIN post_categories pc ON p.id = pc.post_id
         LEFT JOIN categories c ON pc.category_id = c.id
         WHERE (v_category_ids IS NULL OR c.id = ANY(v_category_ids))
+        AND p.is_active IS TRUE
         AND (p_search IS NULL OR p_search = '' OR (p.title ILIKE '%' || p_search || '%' OR p.description ILIKE '%' || p_search || '%'))
     )
     SELECT
@@ -408,6 +413,7 @@ BEGIN
     CROSS JOIN
         total_count tc
     WHERE
+        p.is_active IS TRUE AND
         (v_category_ids IS NULL OR c.id = ANY(v_category_ids))
         AND (p_search IS NULL OR p_search = '' OR (p.title ILIKE '%' || p_search || '%' OR p.description ILIKE '%' || p_search || '%'))
     GROUP BY
@@ -462,6 +468,7 @@ BEGIN
         LEFT JOIN post_categories pc ON p.id = pc.post_id
         LEFT JOIN categories c ON pc.category_id = c.id
         WHERE (v_category_ids IS NULL OR c.id = ANY(v_category_ids))
+        AND p.is_active IS TRUE
         AND (p_search IS NULL OR p_search = '' OR (p.title ILIKE '%' || p_search || '%' OR p.description ILIKE '%' || p_search || '%'))
     )
     SELECT
@@ -509,6 +516,7 @@ BEGIN
         total_count tc
     WHERE
         (v_category_ids IS NULL OR c.id = ANY(v_category_ids))
+        AND p.is_active IS TRUE
         AND (p_search IS NULL OR p_search = '' OR (p.title ILIKE '%' || p_search || '%' OR p.description ILIKE '%' || p_search || '%'))
     GROUP BY
         p.id, tc.total
@@ -648,9 +656,9 @@ BEGIN
         u.profile_picture::TEXT,
         jsonb_agg(DISTINCT jsonb_build_object('id', l.id, 'name', l.name)) AS locations,
         jsonb_agg(DISTINCT jsonb_build_object('id', dc.id, 'name', dc.name)) AS categories,
-        (SELECT COUNT(*) FROM posts p WHERE p.created_by = d.id)::INT AS posts_count,
+        (SELECT COUNT(*) FROM posts p WHERE p.created_by = d.id AND p.is_active IS TRUE)::INT AS posts_count,
         (SELECT COUNT(*) FROM followings f WHERE f.designer_id = d.id)::INT AS follow_count,
-        (SELECT COUNT(*) FROM post_upvotes pu JOIN posts p ON pu.post_id = p.id WHERE p.created_by = d.id)::INT AS upvotes_count,
+        (SELECT COUNT(*) FROM post_upvotes pu JOIN posts p ON pu.post_id = p.id WHERE p.created_by = d.id AND p.is_active IS TRUE)::INT AS upvotes_count,
         tc.total::INT
     FROM
         designers d
@@ -673,7 +681,7 @@ BEGIN
     ORDER BY
         CASE WHEN d_order_by = 'name' THEN CONCAT(u.first_name, ' ', u.last_name) END ASC,
         CASE WHEN d_order_by = 'follow_count' THEN (SELECT COUNT(*) FROM followings f WHERE f.designer_id = d.id) END DESC,
-        CASE WHEN d_order_by = 'upvotes_count' THEN (SELECT COUNT(*) FROM post_upvotes pu JOIN posts p ON pu.post_id = p.id WHERE p.created_by = d.id) END DESC
+        CASE WHEN d_order_by = 'upvotes_count' THEN (SELECT COUNT(*) FROM post_upvotes pu JOIN posts p ON pu.post_id = p.id WHERE p.created_by = d.id  AND p.is_active IS TRUE) END DESC
     LIMIT v_limit OFFSET v_offset;
 END;
 $$ LANGUAGE plpgsql;
@@ -745,9 +753,9 @@ BEGIN
         u.profile_picture::TEXT,
         jsonb_agg(DISTINCT jsonb_build_object('id', l.id, 'name', l.name)) AS locations,
         jsonb_agg(DISTINCT jsonb_build_object('id', dc.id, 'name', dc.name)) AS categories,
-        (SELECT COUNT(*) FROM posts p WHERE p.created_by = d.id)::INT AS posts_count,
+        (SELECT COUNT(*) FROM posts p WHERE p.created_by = d.id AND p.is_active IS TRUE)::INT AS posts_count,
         (SELECT COUNT(*) FROM followings f WHERE f.designer_id = d.id)::INT AS follow_count,
-        (SELECT COUNT(*) FROM post_upvotes pu JOIN posts p ON pu.post_id = p.id WHERE p.created_by = d.id)::INT AS upvotes_count,
+        (SELECT COUNT(*) FROM post_upvotes pu JOIN posts p ON pu.post_id = p.id WHERE p.created_by = d.id AND p.is_active IS TRUE)::INT AS upvotes_count,
         tc.total::INT
     FROM
         designers d
@@ -773,7 +781,7 @@ BEGIN
     ORDER BY
         CASE WHEN d_order_by = 'name' THEN CONCAT(u.first_name, ' ', u.last_name) END ASC,
         CASE WHEN d_order_by = 'follow_count' THEN (SELECT COUNT(*) FROM followings f WHERE f.designer_id = d.id) END DESC,
-        CASE WHEN d_order_by = 'upvotes_count' THEN (SELECT COUNT(*) FROM post_upvotes pu JOIN posts p ON pu.post_id = p.id WHERE p.created_by = d.id) END DESC
+        CASE WHEN d_order_by = 'upvotes_count' THEN (SELECT COUNT(*) FROM post_upvotes pu JOIN posts p ON pu.post_id = p.id WHERE p.created_by = d.id AND p.is_active IS TRUE) END DESC
     LIMIT v_limit OFFSET v_offset;
 END;
 $$ LANGUAGE plpgsql;
@@ -806,9 +814,9 @@ BEGIN
         u.profile_picture::TEXT,
         jsonb_agg(DISTINCT jsonb_build_object('id', l.id, 'name', l.name)) AS locations,
         jsonb_agg(DISTINCT jsonb_build_object('id', dc.id, 'name', dc.name)) AS categories,
-        (SELECT COUNT(*) FROM posts p WHERE p.created_by = d.id)::INT AS posts_count,
+        (SELECT COUNT(*) FROM posts p WHERE p.created_by = d.id AND p.is_active IS TRUE)::INT AS posts_count,
         (SELECT COUNT(*) FROM followings f WHERE f.designer_id = d.id)::INT AS follow_count,
-        (SELECT COUNT(*) FROM post_upvotes pu JOIN posts p ON pu.post_id = p.id WHERE p.created_by = d.id)::INT AS upvotes_count,
+        (SELECT COUNT(*) FROM post_upvotes pu JOIN posts p ON pu.post_id = p.id WHERE p.created_by = d.id AND p.is_active IS TRUE)::INT AS upvotes_count,
         EXISTS (SELECT 1 FROM followings fl WHERE fl.user_id = v_user_id AND fl.designer_id = v_designer_id)::boolean AS user_has_followed
     FROM
         designers d
@@ -828,6 +836,54 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+CREATE OR REPLACE FUNCTION get_designer_data_by_user_id(v_user_id UUID)
+RETURNS TABLE(
+    u_user_id UUID,
+    first_name TEXT,
+    last_name TEXT,
+    email TEXT,
+    phone TEXT,
+    profile_picture TEXT,
+    locations JSONB,
+    categories JSONB,
+	vd_designer_id UUID
+) AS $$
+DECLARE
+    v_designer_id UUID;
+BEGIN
+    SELECT id INTO v_designer_id FROM designers WHERE user_id = v_user_id;
+
+    IF v_designer_id IS NULL THEN
+        RAISE EXCEPTION 'Designer not found for the given user ID';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        d.user_id AS u_user_id,
+        u.first_name::TEXT,
+        u.last_name::TEXT,
+        u.email::TEXT,
+        u.phone::TEXT,
+        u.profile_picture::TEXT,
+        jsonb_agg(DISTINCT jsonb_build_object('id', l.id, 'name', l.name)) AS locations,
+        jsonb_agg(DISTINCT jsonb_build_object('id', dc.id, 'name', dc.name)) AS categories,
+		(SELECT id FROM designers d WHERE user_id=v_user_id) AS vd_designer_id
+    FROM
+        designers d
+    JOIN
+        users u ON d.user_id = u.id
+    JOIN
+        locations l ON d.location_id = l.id
+    LEFT JOIN
+        designer_assigned_categories dac ON dac.designer_id = d.id
+    LEFT JOIN
+        designer_categories dc ON dac.category_id = dc.id
+    WHERE
+        d.id = v_designer_id
+    GROUP BY
+        d.user_id, u.first_name, u.last_name, u.email, u.phone, u.profile_picture;
+END;
+$$ LANGUAGE plpgsql;
 
 
 
@@ -863,7 +919,6 @@ DECLARE
     v_offset INT;
     v_limit INT;
 BEGIN
-    -- Convert category and location lists to arrays of UUIDs if provided
     IF p_categories IS NOT NULL AND p_categories <> '' THEN
         v_category_ids := string_to_array(p_categories, ',')::uuid[];
     ELSE
@@ -876,7 +931,6 @@ BEGIN
         v_location_ids := NULL;
     END IF;
 
-    -- Calculate the offset for pagination
     v_offset := (p_page_index - 1) * p_page_size;
     v_limit := p_page_size;
 
@@ -1056,6 +1110,242 @@ BEGIN
             'id', l.id,
             'name', l.name
         )) FILTER (WHERE vl.location_id IS NOT NULL), '[]'::jsonb) AS locations
+    FROM
+        vacancies v
+    JOIN
+        users u ON v.created_by = u.id
+    LEFT JOIN
+        vacancy_categories vc ON v.id = vc.vacancy_id
+    LEFT JOIN
+        designer_categories dc ON vc.designer_category_id = dc.id
+    LEFT JOIN
+        vacancy_locations vl ON v.id = vl.vacancy_id
+    LEFT JOIN
+        locations l ON vl.location_id = l.id
+    WHERE
+        v.id = p_vacancy_id
+    GROUP BY
+        v.id, u.id;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+
+
+CREATE OR REPLACE FUNCTION get_filtered_vacancies(
+    v_user_id UUID,
+    v_applied_only BOOLEAN DEFAULT FALSE,
+    v_categories TEXT DEFAULT NULL,
+    v_locations TEXT DEFAULT NULL,
+    v_page_index INT DEFAULT 1,
+    v_page_size INT DEFAULT 10
+)
+RETURNS TABLE (
+    vacancy_id UUID,
+    title TEXT,
+    description TEXT,
+    application_url TEXT,
+    is_active BOOLEAN,
+    created_by UUID,
+    created_at TIMESTAMPTZ,
+    categories JSONB,
+    locations JSONB,
+    applied BOOLEAN,
+    total INT
+) AS $$
+DECLARE
+    v_category_ids UUID[];
+    v_location_ids UUID[];
+    v_offset INT;
+    v_limit INT;
+BEGIN
+    IF v_categories IS NOT NULL AND v_categories <> '' THEN
+        v_category_ids := string_to_array(v_categories, ',')::uuid[];
+    END IF;
+
+    IF v_locations IS NOT NULL AND v_locations <> '' THEN
+        v_location_ids := string_to_array(v_locations, ',')::uuid[];
+    END IF;
+
+    v_offset := (v_page_index - 1) * v_page_size;
+    v_limit := v_page_size;
+
+    RETURN QUERY
+    WITH total_count AS (
+        SELECT COUNT(DISTINCT v.id) AS total
+        FROM vacancies v
+        LEFT JOIN vacancy_categories vc ON v.id = vc.vacancy_id
+        LEFT JOIN vacancy_locations vl ON v.id = vl.vacancy_id
+        LEFT JOIN applications a ON v.id = a.vacancy_id AND a.applicant_id = v_user_id
+        WHERE (v_category_ids IS NULL OR vc.designer_category_id = ANY(v_category_ids))
+          AND (v_location_ids IS NULL OR vl.location_id = ANY(v_location_ids))
+          AND (NOT v_applied_only OR a.id IS NOT NULL)
+    )
+    SELECT
+        v.id AS vacancy_id,
+        v.title::TEXT,
+        v.description::TEXT,
+        v.application_url::TEXT,
+        v.is_active,
+        v.created_by,
+        v.created_at,
+        COALESCE(jsonb_agg(DISTINCT jsonb_build_object('id', dc.id, 'name', dc.name)) FILTER (WHERE dc.id IS NOT NULL), '[]'::jsonb) AS categories,
+        COALESCE(jsonb_agg(DISTINCT jsonb_build_object('id', l.id, 'name', l.name)) FILTER (WHERE l.id IS NOT NULL), '[]'::jsonb) AS locations,
+        (EXISTS (SELECT 1 FROM applications a WHERE a.vacancy_id = v.id AND a.applicant_id = v_user_id)) AS applied,
+        tc.total::INT
+    FROM
+        vacancies v
+    LEFT JOIN
+        vacancy_categories vc ON v.id = vc.vacancy_id
+    LEFT JOIN
+        designer_categories dc ON vc.designer_category_id = dc.id
+    LEFT JOIN
+        vacancy_locations vl ON v.id = vl.vacancy_id
+    LEFT JOIN
+        locations l ON vl.location_id = l.id
+    LEFT JOIN
+        applications a ON v.id = a.vacancy_id AND a.applicant_id = v_user_id
+    CROSS JOIN
+        total_count tc
+    WHERE
+        (v_category_ids IS NULL OR vc.designer_category_id = ANY(v_category_ids))
+        AND (v_location_ids IS NULL OR vl.location_id = ANY(v_location_ids))
+        AND (NOT v_applied_only OR a.id IS NOT NULL)
+    GROUP BY
+        v.id, tc.total
+    ORDER BY
+        v.created_at DESC
+    LIMIT v_limit OFFSET v_offset;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION get_public_filtered_vacancies(
+    v_categories TEXT DEFAULT NULL,
+    v_locations TEXT DEFAULT NULL,
+    v_page_index INT DEFAULT 1,
+    v_page_size INT DEFAULT 10
+)
+RETURNS TABLE (
+    vacancy_id UUID,
+    title TEXT,
+    description TEXT,
+    application_url TEXT,
+    is_active BOOLEAN,
+    created_by UUID,
+    created_at TIMESTAMPTZ,
+    categories JSONB,
+    locations JSONB,
+    total INT
+) AS $$
+DECLARE
+    v_category_ids UUID[];
+    v_location_ids UUID[];
+    v_offset INT;
+    v_limit INT;
+BEGIN
+    IF v_categories IS NOT NULL AND v_categories <> '' THEN
+        v_category_ids := string_to_array(v_categories, ',')::uuid[];
+    END IF;
+
+    IF v_locations IS NOT NULL AND v_locations <> '' THEN
+        v_location_ids := string_to_array(v_locations, ',')::uuid[];
+    END IF;
+
+    v_offset := (v_page_index - 1) * v_page_size;
+    v_limit := v_page_size;
+
+    RETURN QUERY
+    WITH total_count AS (
+        SELECT COUNT(DISTINCT v.id) AS total
+        FROM vacancies v
+        LEFT JOIN vacancy_categories vc ON v.id = vc.vacancy_id
+        LEFT JOIN vacancy_locations vl ON v.id = vl.vacancy_id
+        WHERE (v_category_ids IS NULL OR vc.designer_category_id = ANY(v_category_ids))
+          AND (v_location_ids IS NULL OR vl.location_id = ANY(v_location_ids))
+    )
+    SELECT
+        v.id AS vacancy_id,
+        v.title::TEXT,
+        v.description::TEXT,
+        v.application_url::TEXT,
+        v.is_active,
+        v.created_by,
+        v.created_at,
+        COALESCE(jsonb_agg(DISTINCT jsonb_build_object('id', dc.id, 'name', dc.name)) FILTER (WHERE dc.id IS NOT NULL), '[]'::jsonb) AS categories,
+        COALESCE(jsonb_agg(DISTINCT jsonb_build_object('id', l.id, 'name', l.name)) FILTER (WHERE l.id IS NOT NULL), '[]'::jsonb) AS locations,
+        tc.total::INT
+    FROM
+        vacancies v
+    LEFT JOIN
+        vacancy_categories vc ON v.id = vc.vacancy_id
+    LEFT JOIN
+        designer_categories dc ON vc.designer_category_id = dc.id
+    LEFT JOIN
+        vacancy_locations vl ON v.id = vl.vacancy_id
+    LEFT JOIN
+        locations l ON vl.location_id = l.id
+    CROSS JOIN
+        total_count tc
+    WHERE
+        (v_category_ids IS NULL OR vc.designer_category_id = ANY(v_category_ids))
+        AND (v_location_ids IS NULL OR vl.location_id = ANY(v_location_ids))
+    GROUP BY
+        v.id, tc.total
+    ORDER BY
+        v.created_at DESC
+    LIMIT v_limit OFFSET v_offset;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION get_vacancy_by_id_with_user(
+    p_vacancy_id UUID,
+	p_user_id UUID
+)
+RETURNS TABLE (
+    vacancy_id UUID,
+    title TEXT,
+    description TEXT,
+    application_url TEXT,
+    is_active BOOLEAN,
+    created_at TIMESTAMPTZ,
+    created_by JSONB,
+    categories JSONB,
+    locations JSONB,
+	applied BOOLEAN,
+	resume_url TEXT,
+	resume_id UUID
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        v.id AS vacancy_id,
+        v.title::TEXT,
+        v.description::TEXT,
+        v.application_url::TEXT,
+        v.is_active,
+        v.created_at,
+        jsonb_build_object(
+            'id', v.created_by,
+            'first_name', u.first_name,
+            'last_name', u.last_name,
+            'email', u.email,
+            'phone', u.phone,
+            'profile_picture', u.profile_picture
+        ) AS created_by,
+        COALESCE(jsonb_agg(DISTINCT jsonb_build_object(
+            'id', dc.id,
+            'name', dc.name
+        )) FILTER (WHERE vc.designer_category_id IS NOT NULL), '[]'::jsonb) AS categories,
+        COALESCE(jsonb_agg(DISTINCT jsonb_build_object(
+            'id', l.id,
+            'name', l.name
+        )) FILTER (WHERE vl.location_id IS NOT NULL), '[]'::jsonb) AS locations,
+		(EXISTS (SELECT 1 FROM applications a WHERE a.vacancy_id = v.id AND a.applicant_id = p_user_id)) AS applied,
+		(SELECT a.resume_url FROM applications a WHERE a.vacancy_id = v.id AND a.applicant_id = p_user_id LIMIT 1) AS resume_url,
+	(SELECT a.id FROM applications a WHERE a.vacancy_id = v.id AND a.applicant_id = p_user_id LIMIT 1) AS resume_id
     FROM
         vacancies v
     JOIN

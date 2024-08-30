@@ -1,4 +1,5 @@
 const designerService = require("../services/designer-service");
+const userService = require("../services/user-service")
 
 exports.getAllDesigners = async (req, res) => {
     try {
@@ -18,6 +19,21 @@ exports.getDataByDesigner  = async (req, res) => {
         const userId = req.query.user_id ? req.query.user_id : null;
 
         const result = await designerService.getDataByDesigner(designer_id, userId)
+        if(result) return res.status(200).json({ message: 'Designer fetched successfully', body: {result}, status: 'success' });
+
+        return  res.status(200).json({ message: 'Designer fetched failed', body: {}, status: 'error' });
+
+    } catch (e) {
+        console.error('error in get posts function', e);
+        res.status(200).json({ message: 'Internal server error', e, status: 'error'  });
+    }
+}
+
+exports.getDesignerDataByUserId = async (req, res) => {
+    try {
+        const userId = req.query.userId;
+
+        const result = await designerService.getDesignerDataByUserId(userId)
         if(result) return res.status(200).json({ message: 'Designer fetched successfully', body: {result}, status: 'success' });
 
         return  res.status(200).json({ message: 'Designer fetched failed', body: {}, status: 'error' });
@@ -71,5 +87,29 @@ exports.follow = async (req, res) => {
     } catch (e) {
         console.error('error in upvote function', e);
         res.status(200).json({ message: 'Internal server error', e, status: 'error'  });        
+    }
+}
+
+exports.updateDesigner = async (req, res) => {
+    try {
+
+        const {user_id, designer_id, first_name, last_name, categories, location, profile_picture, phone } = req.body;
+
+        const userUpdated = await designerService.updateUserData(user_id, first_name, last_name, location, profile_picture, phone)
+        if(!userUpdated) return res.status(200).json({ message: 'User update failed. Try again later!', body: {}, status: 'error' })
+
+        const categoriesDeleted = await designerService.deleteDesignerCategories(designer_id)
+        if(!categoriesDeleted) return res.status(200).json({ message: 'Designer categories delete failed. Try again later!', body: {}, status: 'error' })
+
+        const designerCategoryUpdated = await designerService.createDesignerCategories(designer_id, categories)
+        if(!designerCategoryUpdated) return res.status(200).json({ message: 'Designer update failed. Try again later!', body: {}, status: 'error' })
+
+        const userData = await userService.getUserbyId(user_id)
+        if(userData) return res.status(200).json({ message: 'Profile updated succesfully.', body: { user: userData }, status: 'success' });
+        return res.status(200).json({ message: 'Update failed. Try again later!', body: { user: userData}, status: 'error' });
+
+    } catch (e) {
+        console.error('error in update Designer function', e);
+        res.status(200).json({ message: 'Internal server error', e, status: 'error'  });
     }
 }

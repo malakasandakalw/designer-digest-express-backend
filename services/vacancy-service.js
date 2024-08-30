@@ -13,6 +13,45 @@ exports.createVacancy = async (title, description, userId, application_url) => {
     }
 }
 
+exports.updateVacancy = async(id, title, description, application_url, isActive) => {
+    try {
+        const result = await db.query("UPDATE vacancies SET title=$2, description=$3, application_url=$4, is_active=$5 WHERE id=$1", [id, title, description, application_url, isActive])
+        if (result) {
+            return true
+        }
+        return false
+    } catch (e) {
+        console.error('Error when updating vacancy:', e.message, e.stack);
+        throw new Error('Error when updating vacancy', e)
+    }
+}
+
+exports.deleteVacancyCategories = async(vacancyId) => {
+    try {
+        const result = await db.query(`DELETE FROM vacancy_categories WHERE vacancy_id=$1`, [vacancyId])
+        if (result) {
+            return true
+        }
+        return false
+    } catch (e) {
+        console.error('Error when deleting vacancy categories:', e.message, e.stack);
+        throw new Error('Error when deleting vacancy categories', e)
+    }
+}
+
+exports.deleteVacancyLocations = async(vacancyId) => {
+    try {
+        const result = await db.query(`DELETE FROM vacancy_locations WHERE vacancy_id=$1`, [vacancyId])
+        if (result) {
+            return true
+        }
+        return false
+    } catch (e) {
+        console.error('Error when deleting vacancy locations:', e.message, e.stack);
+        throw new Error('Error when deleting vacancy locations', e)
+    }
+}
+
 
 exports.createvacancyCategories = async (vacancyId, categories) => {
     try {
@@ -74,6 +113,18 @@ exports.getById = async (vacancyId) => {
     }
 }
 
+exports.getByIdWithUser = async (vacancyId, userId) => {
+    try {
+        const result = await db.query(`SELECT * FROM get_vacancy_by_id_with_user($1, $2)`, [vacancyId, userId])
+        if (result.rows.length) {
+            return result.rows[0];
+        }
+    } catch (e) {
+        console.error('Error when getting vacancy:', e.message, e.stack);
+        throw new Error('Error when getting vacancy', e);
+    }
+}
+
 exports.getFullById = async (vacancyId) => {
     try {
         const result = await db.query(`SELECT * FROM get_full_vacancy_by_id($1)`, [vacancyId])
@@ -87,3 +138,42 @@ exports.getFullById = async (vacancyId) => {
 }
 
 
+exports.getFilteredVacancies = async(user_id, applied_only, categories, locations, pageIndex, pageSize) => {
+    try {
+        const result = await db.query("SELECT * FROM get_filtered_vacancies($1,$2,$3,$4,$5,$6)", [user_id, applied_only, categories, locations, pageIndex,pageSize])
+        if(result.rows) {
+
+            if (result.rows.length === 0) {
+                return { vacancies: [], total: 0 };
+            }
+    
+            return {
+                vacancies: result.rows,
+                total: result.rows[0].total
+            };
+        }
+    } catch (e) {
+        console.error('Error when getting users:', e.message, e.stack);
+        throw new Error('Error when getting users', e);
+    }
+}
+
+exports.getPublicFilteredVacancies = async(categories, locations, pageIndex, pageSize) => {
+    try {
+        const result = await db.query("SELECT * FROM get_public_filtered_vacancies($1,$2,$3,$4)", [categories, locations, pageIndex, pageSize])
+        if(result.rows) {
+
+            if (result.rows.length === 0) {
+                return { vacancies: [], total: 0 };
+            }
+    
+            return {
+                vacancies: result.rows,
+                total: result.rows[0].total
+            };
+        }
+    } catch (e) {
+        console.error('Error when getting users:', e.message, e.stack);
+        throw new Error('Error when getting users', e);
+    }
+}

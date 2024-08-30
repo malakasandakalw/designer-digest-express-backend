@@ -11,6 +11,7 @@ const postsRoutes = require("./posts-routes")
 const fileManagerRoutes = require("./file-manager-routes")
 const chatsRoutes = require("./chats-routes")
 const vacancyRoutes = require("./vacancy-routes")
+const applicationRoutes = require("./application-routes")
 
 router.use("/users", userRoutes);
 router.use("/designers", designerRoutes);
@@ -22,5 +23,6 @@ router.use("/posts", postsRoutes);
 router.use("/file-manager", fileManagerRoutes)
 router.use("/chats", chatsRoutes)
 router.use("/vacancy", vacancyRoutes)
+router.use("/applications", applicationRoutes)
 
 module.exports = router;

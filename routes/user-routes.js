@@ -13,5 +13,7 @@ router.get("/", userController.getUserByEmail);
 router.post("/verify", TokenAuthenticator, userController.verify);
 router.post("/signup", UserSignUpRequestValidate, UserSignUpAlreadyExists, userController.createUser);
 router.post("/login", UserLoginExists, userController.login)
+router.post("/update", TokenAuthenticator, userController.update)
+
 
 module.exports = router;

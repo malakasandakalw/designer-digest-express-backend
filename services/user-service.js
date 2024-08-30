@@ -76,6 +76,23 @@ exports.getUserbyId = async (userId) => {
 
 }
 
+
+
+exports.update = async (userId, first_name, last_name, profile_picture, phone) => {
+    try {
+        const result = await db.query("UPDATE users SET first_name=$2, last_name=$3, profile_picture=$4, phone=$5 WHERE users.id=$1", [userId, first_name, last_name, profile_picture, phone])
+        if (result) {
+            return true
+        }
+        return false
+    } catch (e) {
+        console.error('Error when profile:', e.message, e.stack);
+        throw new Error('Error when profile', e);        
+    }
+}
+
+
+
 async function getUserByEmail(email) {
     try {
         const result = await db.query('SELECT id, first_name, last_name, email, password, profile_picture, phone, is_verified,(SELECT value FROM user_roles WHERE user_roles.id=users.user_role) as role FROM users WHERE email=$1', [email]);

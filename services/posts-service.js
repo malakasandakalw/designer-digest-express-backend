@@ -114,7 +114,7 @@ exports.getById = async (postId) => {
     try {
         const result = await db.query(`SELECT * FROM get_post_by_id($1)`, [postId])
         if (result.rows.length) {
-            return result.rows;
+            return result.rows[0];
         }
     } catch (e) {
         console.error('Error when getting post:', e.message, e.stack);
@@ -170,6 +170,61 @@ exports.createPost = async (title, description, userId) => {
     } catch (e) {
         console.error('Error when creating post:', e.message, e.stack);
         throw new Error('Error when creating post', e)
+    }
+}
+
+exports.updatePost  = async (id, title, description) => {
+    try {
+        const result = await db.query("UPDATE posts SET title=$2, description=$3 WHERE id=$1", [id, title, description])
+        if (result) {
+            return true
+        }
+        return false
+    } catch (e) {
+        console.error('Error when update post:', e.message, e.stack);
+        throw new Error('Error when update post', e)
+    }
+}
+
+exports.deletePost  = async (id) => {
+    try {
+        const result = await db.query("UPDATE posts SET is_active=FALSE WHERE id=$1", [id])
+        if (result) {
+            return true
+        }
+        return false
+    } catch (e) {
+        console.error('Error when delete post:', e.message, e.stack);
+        throw new Error('Error when delete post', e)
+    }
+}
+
+exports.updateThumbnail = async (id, thumbnail) => {
+    try {
+        const resultAll = await db.query("UPDATE post_media SET is_thumbnail=FALSE WHERE post_id=$1", [id])
+        if(resultAll) {
+            const result = await db.query("UPDATE post_media SET is_thumbnail=TRUE WHERE post_id=$1 AND media_url=$2", [id, thumbnail])
+            if (result) {
+                return true
+            }
+        }
+        return false
+    } catch (e) {
+        console.error('Error when update post:', e.message, e.stack);
+        throw new Error('Error when update post', e)
+    }
+}
+
+exports.deleteCategories = async (id) => {
+    try {
+        const result = await db.query("DELETE FROM post_categories WHERE post_id=$1", [id])
+        if (result) {
+            return true
+        }
+        return false
+    } catch (e) {
+        console.error('Error when update post:', e.message, e.stack);
+        throw new Error('Error when update post', e)
     }
 }
 

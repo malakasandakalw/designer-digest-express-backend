@@ -23,6 +23,49 @@ exports.getAllDesigners = async() => {
     }
 }
 
+exports.updateUserData = async (user_id, first_name, last_name, location, profile_picture, phone) => {
+    try {
+        const result = await db.query("UPDATE users SET first_name=$2, last_name=$3, profile_picture=$4, phone=$5 WHERE users.id=$1", [user_id, first_name, last_name, profile_picture, phone])
+        if (result) {
+            const result_ = await db.query("UPDATE designers SET location_id=$2 WHERE user_id=$1", [user_id, location])
+            if(result_) {
+                return true
+            }
+        }
+        return false
+    } catch (e) {
+        console.error('Error when profile:', e.message, e.stack);
+        throw new Error('Error when profile', e);        
+    }
+}
+
+exports.deleteDesignerCategories = async(designer_id) => {
+    try {
+        const result = await db.query(`DELETE FROM designer_assigned_categories WHERE designer_id=$1`, [designer_id])
+        if (result) {
+            return true
+        }
+        return false
+    } catch (e) {
+        console.error('Error when deleting designer categories:', e.message, e.stack);
+        throw new Error('Error when deleting designer categories', e)
+    }
+}
+
+exports.createDesignerCategories = async (designer_id, categories) => {
+    try {
+        const values = categories.map((_, index) => `($1, $${index + 2})`).join(', ');
+        const result = await db.query(`INSERT INTO designer_assigned_categories (designer_id, category_id) VALUES ${values}`, [designer_id, ...categories])
+        if (result) {
+            return true
+        }
+        return false
+    } catch (e) {
+        console.error('Error when creating designer categories:', e.message, e.stack);
+        throw new Error('Error when creating designer categories', e)
+    }
+}
+
 exports.getFilteredDesigners = async(userId, followed_only, categories, orderBy, locations, search, pageIndex, pageSize) => {
     try {
         const result = await db.query("SELECT * FROM get_filtered_designers($1,$2,$3,$4,$5,$6,$7,$8)", [userId, followed_only, locations, categories, orderBy, search,pageIndex,pageSize])
@@ -54,6 +97,31 @@ exports.getDataByDesigner = async(designer_id, user_id) => {
         throw new Error('Error when getting users', e);
     }
 }
+
+exports.getDesignerDataByUserId = async(user_id) => {
+    try {
+        const result = await db.query(`SELECT * FROM get_designer_data_by_user_id($1)`, [user_id])
+        if(result.rows) {
+            const dataRow = result.rows[0]
+            let designer = {
+                user_id: dataRow.u_user_id,
+                first_name: dataRow.first_name,
+                last_name: dataRow.last_name,
+                email: dataRow.email,
+                phone: dataRow.phone,
+                profile_picture: dataRow.profile_picture,
+                locations: dataRow.locations,
+                categories: dataRow.categories,
+                designer_id: dataRow.vd_designer_id
+            }
+            return designer
+        }
+    } catch (e) {
+        console.error('Error when getting users:', e.message, e.stack);
+        throw new Error('Error when getting users', e);
+    }
+}
+
 
 exports.getPublicFilteredDesigners = async(categories, orderBy, locations, search, pageIndex, pageSize) => {
     try {

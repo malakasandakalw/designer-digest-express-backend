@@ -26,6 +26,49 @@ exports.createPost = async (req, res) => {
 
 }
 
+exports.updatePost = async (req, res) => {
+    try {
+
+        const {id, title, description, categories, thumbnail } = req.body;
+
+        const isUpdated = await postsService.updatePost(id, title, description)
+        if(!isUpdated) return res.status(200).json({ message: 'Post Update failed. Try again later!', body: {}, status: 'error' })
+
+        const isThumbnailUpdated = await postsService.updateThumbnail(id, thumbnail)
+        if(!isThumbnailUpdated) return res.status(200).json({ message: 'Post Update failed. Try again later!', body: {}, status: 'error' })
+
+        const isCategoriesDeleted = await postsService.deleteCategories(id)
+        if(!isCategoriesDeleted) return res.status(200).json({ message: 'Post Update failed. Try again later!', body: {}, status: 'error' })
+
+        const postCategoryUpdated = await postsService.createPostCategories(id, categories)
+        if(!postCategoryUpdated) return res.status(200).json({ message: 'Post Update failed. Try again later!', body: {}, status: 'error' })
+
+        return res.status(200).json({ message: 'Post updated successfully', body: {}, status: 'success' });
+
+    } catch (e) {
+        console.error('error in update post function', e);
+        res.status(200).json({ message: 'Internal server error', e, status: 'error'  });
+    }
+
+}
+
+exports.deletePost = async (req, res) => {
+    try {
+
+        const {id} = req.body;
+
+        const isDeleted = await postsService.deletePost(id)
+        if(!isDeleted) return res.status(200).json({ message: 'Post delete failed. Try again later!', body: {}, status: 'error' })
+
+        return res.status(200).json({ message: 'Post deleted successfully', body: {}, status: 'success' });
+
+    } catch (e) {
+        console.error('error in update post function', e);
+        res.status(200).json({ message: 'Internal server error', e, status: 'error'  });
+    }
+
+}
+
 exports.upvote = async (req, res) => {
     try {
         const userId = req.user.id;

@@ -15,5 +15,6 @@ app.use('/api', routes);
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/uploads/vacancy', express.static(path.join(__dirname, 'uploads/vacancy')));
+app.use('/uploads/applications', express.static(path.join(__dirname, 'uploads/applications')));
 
 module.exports = app;

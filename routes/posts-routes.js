@@ -6,6 +6,8 @@ const IsDesignerValidator = require("../middlewares/IsDesignerValidator");
 const postsController = require("../controllers/posts-controller");
 
 router.post("/create", TokenAuthenticator, IsDesignerValidator, postsController.createPost)
+router.post("/update", TokenAuthenticator, IsDesignerValidator, postsController.updatePost)
+router.post("/delete", TokenAuthenticator, IsDesignerValidator, postsController.deletePost)
 router.post("/upvote", TokenAuthenticator, postsController.upvote)
 router.get("/get-posts", postsController.getPosts)
 router.get("/get-by-designer", TokenAuthenticator, IsDesignerValidator, postsController.getByDesigner)
