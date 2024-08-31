@@ -44,6 +44,30 @@ exports.getDesignerDataByUserId = async (req, res) => {
     }
 }
 
+exports.getDashboardDate = async (req, res) => {
+    try {
+
+        const start_date = req.query.start_date
+        const end_date = req.query.end_date
+        const user_id = req.user.id
+
+        const followings = await designerService.getDashboardFollowingCount(user_id, start_date, end_date)
+        const votes = await designerService.getDashboardVotesCount(user_id, start_date, end_date)        
+        const posts = await designerService.getDashboardPostsCount(user_id, start_date, end_date)
+
+        const data = {
+            followings,
+            votes,
+            posts
+        }
+        return res.status(200).json({ message: 'Dashboard successfully', body: {data}, status: 'success' });
+
+    } catch (e) {
+        console.error('error in get posts function', e);
+        res.status(200).json({ message: 'Internal server error', e, status: 'error'  });
+    }
+}
+
 exports.getFilteredDesigners = async (req, res) => {
     try {
         const followed_only = req.query.followed_only
@@ -79,10 +103,9 @@ exports.follow = async (req, res) => {
 
         const followed = await designerService.follow(designer_id, userId)
 
-        if(!followed) return res.status(200).json({ message: 'Follow error', body: {}, status: 'error' });
+        if(!followed) return res.status(200).json({ message: 'There is error when following', body: {}, status: 'error' });
 
-        return res.status(200).json({ message: 'Follow successfully', body: {followed}, status: 'success' });
-
+        return res.status(200).json({ message: 'Now you are following', body: {followed}, status: 'success' });
 
     } catch (e) {
         console.error('error in upvote function', e);

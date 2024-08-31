@@ -543,7 +543,8 @@ RETURNS TABLE (
     categories JSONB,
     upvote_count INT,
     user_has_voted BOOLEAN,
-    user_has_followed BOOLEAN
+    user_has_followed BOOLEAN,
+	created_user_id UUID
 ) AS $$
 BEGIN
     RETURN QUERY
@@ -574,7 +575,8 @@ BEGIN
         )) FILTER (WHERE c.id IS NOT NULL), '[]'::jsonb) AS categories,
         COUNT(DISTINCT pu.voted_by)::int AS upvote_count,
         EXISTS (SELECT 1 FROM post_upvotes pu WHERE pu.post_id = p.id AND pu.voted_by = p_user_id)::boolean AS user_has_voted,
-        EXISTS (SELECT 1 FROM followings fl WHERE fl.user_id = p_user_id AND fl.designer_id = p.created_by)::boolean AS user_has_followed
+        EXISTS (SELECT 1 FROM followings fl WHERE fl.user_id = p_user_id AND fl.designer_id = p.created_by)::boolean AS user_has_followed,
+		(SELECT id FROM users WHERE id=(SELECT user_id FROM designers WHERE id=p.created_by)) AS created_user_id
     FROM
         posts p
     LEFT JOIN
@@ -593,7 +595,6 @@ BEGIN
         p.id, pt.type, pt.media_url;
 END;
 $$ LANGUAGE plpgsql;
-
 
 
 
@@ -1147,7 +1148,7 @@ RETURNS TABLE (
     description TEXT,
     application_url TEXT,
     is_active BOOLEAN,
-    created_by UUID,
+    created_by JSONB,
     created_at TIMESTAMPTZ,
     categories JSONB,
     locations JSONB,
@@ -1188,7 +1189,14 @@ BEGIN
         v.description::TEXT,
         v.application_url::TEXT,
         v.is_active,
-        v.created_by,
+        jsonb_build_object(
+            'id', u.id,
+            'first_name', u.first_name,
+            'last_name', u.last_name,
+            'email', u.email,
+            'phone', u.phone,
+            'profile_picture', u.profile_picture
+        ) AS created_by,
         v.created_at,
         COALESCE(jsonb_agg(DISTINCT jsonb_build_object('id', dc.id, 'name', dc.name)) FILTER (WHERE dc.id IS NOT NULL), '[]'::jsonb) AS categories,
         COALESCE(jsonb_agg(DISTINCT jsonb_build_object('id', l.id, 'name', l.name)) FILTER (WHERE l.id IS NOT NULL), '[]'::jsonb) AS locations,
@@ -1196,6 +1204,8 @@ BEGIN
         tc.total::INT
     FROM
         vacancies v
+    LEFT JOIN
+        users u ON v.created_by = u.id
     LEFT JOIN
         vacancy_categories vc ON v.id = vc.vacancy_id
     LEFT JOIN
@@ -1213,12 +1223,13 @@ BEGIN
         AND (v_location_ids IS NULL OR vl.location_id = ANY(v_location_ids))
         AND (NOT v_applied_only OR a.id IS NOT NULL)
     GROUP BY
-        v.id, tc.total
+        v.id, tc.total, u.id
     ORDER BY
         v.created_at DESC
     LIMIT v_limit OFFSET v_offset;
 END;
 $$ LANGUAGE plpgsql;
+
 
 
 CREATE OR REPLACE FUNCTION get_public_filtered_vacancies(
@@ -1233,7 +1244,7 @@ RETURNS TABLE (
     description TEXT,
     application_url TEXT,
     is_active BOOLEAN,
-    created_by UUID,
+    created_by JSONB,
     created_at TIMESTAMPTZ,
     categories JSONB,
     locations JSONB,
@@ -1271,13 +1282,22 @@ BEGIN
         v.description::TEXT,
         v.application_url::TEXT,
         v.is_active,
-        v.created_by,
+        jsonb_build_object(
+            'id', u.id,
+            'first_name', u.first_name,
+            'last_name', u.last_name,
+            'email', u.email,
+            'phone', u.phone,
+            'profile_picture', u.profile_picture
+        ) AS created_by,
         v.created_at,
         COALESCE(jsonb_agg(DISTINCT jsonb_build_object('id', dc.id, 'name', dc.name)) FILTER (WHERE dc.id IS NOT NULL), '[]'::jsonb) AS categories,
         COALESCE(jsonb_agg(DISTINCT jsonb_build_object('id', l.id, 'name', l.name)) FILTER (WHERE l.id IS NOT NULL), '[]'::jsonb) AS locations,
         tc.total::INT
     FROM
         vacancies v
+    LEFT JOIN
+        users u ON v.created_by = u.id
     LEFT JOIN
         vacancy_categories vc ON v.id = vc.vacancy_id
     LEFT JOIN
@@ -1292,12 +1312,13 @@ BEGIN
         (v_category_ids IS NULL OR vc.designer_category_id = ANY(v_category_ids))
         AND (v_location_ids IS NULL OR vl.location_id = ANY(v_location_ids))
     GROUP BY
-        v.id, tc.total
+        v.id, tc.total, u.id
     ORDER BY
         v.created_at DESC
     LIMIT v_limit OFFSET v_offset;
 END;
 $$ LANGUAGE plpgsql;
+
 
 
 CREATE OR REPLACE FUNCTION get_vacancy_by_id_with_user(

@@ -7,6 +7,8 @@ router.get("/get-designer-by-user-id", designerController.getDesignerDataByUserI
 router.get("/get-data-by-designer", designerController.getDataByDesigner);
 router.get("/get-all-designers", designerController.getAllDesigners);
 router.get("/get-filtered-designers", designerController.getFilteredDesigners);
+router.get("/get-dashboard-data", TokenAuthenticator, designerController.getDashboardDate);
+
 router.post("/follow", TokenAuthenticator, designerController.follow);
 router.post("/update", TokenAuthenticator, designerController.updateDesigner)
 

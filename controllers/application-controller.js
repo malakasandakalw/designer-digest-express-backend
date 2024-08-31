@@ -9,7 +9,7 @@ exports.createApplication = async (req, res) => {
         const {files, vacancyId } = req.body;
 
         const applicationId = await applicationService.createApplication(userId, files.url, vacancyId)
-        if(!applicationId) return res.status(200).json({ message: 'Application Creation failed. Try again later!', body: {}, status: 'error' })
+        if(!applicationId) return res.status(200).json({ message: 'Application creating failed. Try again later!', body: {}, status: 'error' })
 
         return res.status(200).json({ message: 'Application created successfully', body: {}, status: 'success' });
 
@@ -26,7 +26,7 @@ exports.updateApplication = async (req, res) => {
         const {files, applicationId } = req.body;
 
         const updated = await applicationService.updateApplication(files.url, applicationId)
-        if(!updated) return res.status(200).json({ message: 'Application Update failed. Try again later!', body: {}, status: 'error' })
+        if(!updated) return res.status(200).json({ message: 'Application update failed. Try again later!', body: {}, status: 'error' })
 
         return res.status(200).json({ message: 'Application updated successfully', body: {}, status: 'success' });
 
