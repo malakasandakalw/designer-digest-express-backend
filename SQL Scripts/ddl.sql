@@ -66,7 +66,7 @@ CREATE TABLE
     posts (
         id UUID DEFAULT uuid_generate_v4 () NOT NULL,
         title TEXT NOT NULL,
-        description TEXT,
+        description TEXT NOT NULL,
         created_at TIMESTAMP
         WITH
             TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -220,8 +220,8 @@ CREATE TABLE users_sockets (
 CREATE TABLE vacancies(
     id UUID DEFAULT uuid_generate_v4 () NOT NULL,
     title TEXT NOT NULL,
-    description TEXT,
-    application_url TEXT,
+    description TEXT NOT NULL,
+    application_url TEXT NOT NULL,
     is_active BOOLEAN DEFAULT FALSE,
     created_by UUID NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -251,7 +251,7 @@ CREATE TABLE applications(
     id UUID DEFAULT uuid_generate_v4 () NOT NULL,
     applicant_id UUID NOT NULL,
     vacancy_id UUID NOT NULL,
-    resume_url TEXT,
+    resume_url TEXT NOT NULL,
     applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 

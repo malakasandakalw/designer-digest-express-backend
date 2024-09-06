@@ -107,6 +107,7 @@ exports.getById = async (vacancyId) => {
         if (result.rows.length) {
             return result.rows[0];
         }
+        return null
     } catch (e) {
         console.error('Error when getting vacancy:', e.message, e.stack);
         throw new Error('Error when getting vacancy', e);
@@ -119,6 +120,7 @@ exports.getByIdWithUser = async (vacancyId, userId) => {
         if (result.rows.length) {
             return result.rows[0];
         }
+        return null
     } catch (e) {
         console.error('Error when getting vacancy:', e.message, e.stack);
         throw new Error('Error when getting vacancy', e);
@@ -131,6 +133,7 @@ exports.getFullById = async (vacancyId) => {
         if (result.rows.length) {
             return result.rows[0];
         }
+        return null
     } catch (e) {
         console.error('Error when getting vacancy:', e.message, e.stack);
         throw new Error('Error when getting vacancy', e);

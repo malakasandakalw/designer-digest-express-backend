@@ -70,6 +70,31 @@ exports.login = async (req, res) => {
     }
 }
 
+exports.resetPassword = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        if(!userId) return
+        
+        const { current_password , new_password } = req.body;
+
+        const passwordValid = await userService.passwordValidate(userId, current_password)
+        if(passwordValid === false) {
+            return res.status(200).json({ message: 'Current password is wrong!', body: {}, status: 'error' });
+        }
+
+        if(passwordValid === null) return res.status(200).json({ message: 'Update failed. Try again later!', body: {}, status: 'error' }); 
+
+        const result = await userService.updatePassword(userId, new_password);
+
+        if(result) return res.status(200).json({ message: 'Password updated succesfully.', body: { }, status: 'success' });
+        return res.status(200).json({ message: 'Update failed. Try again later!', body: {}, status: 'error' });
+
+    } catch (e) {
+        console.error('error in create user function', e);
+        res.status(200).json({ message: 'Internal server error', e, status: 'error'  });
+    }
+}
+
 exports.update =  async (req, res) => {
     try {
         const userId = req.user.id;

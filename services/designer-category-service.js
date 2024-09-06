@@ -6,6 +6,7 @@ exports.getAll = async () => {
         if(result.rows.length) {
             return result.rows;
         }
+        return []
     } catch (e) {
         console.error('Error when getting designer categories:', e.message, e.stack);
         throw new Error('Error when getting designer categories', e);

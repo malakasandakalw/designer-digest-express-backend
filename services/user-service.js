@@ -7,6 +7,7 @@ exports.getAllUsers = async() => {
         if(result.rows) {
             return result.rows;
         }
+        return []
     } catch (e) {
         console.error('Error when getting users:', e.message, e.stack);
         throw new Error('Error when getting users', e);
@@ -43,6 +44,23 @@ exports.createUser = async (userData) => {
     }
 }
 
+exports.updatePassword = async (userId, newPasword) => {
+    const hashedPassword = await hashPassword(newPasword);
+    try {
+        const result = await db.query("UPDATE users SET password=$2 WHERE id=$1", [userId, hashedPassword]);
+
+        if(result.rows) {
+            return true
+        } 
+
+        return false
+
+    } catch (e) {
+        console.error('Error creating user:', e.message, e.stack);
+        throw new Error('Error creating user', e);
+    }
+}
+
 exports.authenticate = async (email, password) => {
 
     const user = await getUserByEmail(email);
@@ -54,6 +72,30 @@ exports.authenticate = async (email, password) => {
         return null;
     }
 
+}
+
+exports.passwordValidate = async (userId, currentPassword) => {
+    try {
+        const password = await db.query('SELECT password FROM users WHERE id=$1', [userId])
+
+        if(password.rows) {
+
+            const passwordValidate = await comparePassword(currentPassword, password.rows[0].password);
+
+            if(passwordValidate) {
+                return true
+            } 
+            
+            return false;
+
+        }
+
+        return null
+
+    } catch (e) {
+        console.error('Error updating password:', e.message, e.stack);
+        throw new Error('Error updating password', e); 
+    }
 }
 
 exports.getUserbyId = async (userId) => {

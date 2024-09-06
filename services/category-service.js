@@ -6,6 +6,7 @@ exports.getAll = async () => {
         if(result.rows.length) {
             return result.rows;
         }
+        return []
     } catch (e) {
         console.error('Error when getting categories:', e.message, e.stack);
         throw new Error('Error when getting categories', e);
@@ -18,6 +19,7 @@ exports.getById = async (id) => {
         if(result.rows.length) {
             return result.rows[0];
         }
+        return null
     } catch (e) {
         console.error('Error when getting categories:', e.message, e.stack);
         throw new Error('Error when getting categories', e);

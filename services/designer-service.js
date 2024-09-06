@@ -17,6 +17,7 @@ exports.getAllDesigners = async() => {
         if(result.rows) {
             return result.rows;
         }
+        return []
     } catch (e) {
         console.error('Error when getting users:', e.message, e.stack);
         throw new Error('Error when getting users', e);
@@ -92,6 +93,7 @@ exports.getDataByDesigner = async(designer_id, user_id) => {
         if(result.rows) {
             return result.rows[0]
         }
+        return null
     } catch (e) {
         console.error('Error when getting users:', e.message, e.stack);
         throw new Error('Error when getting users', e);
@@ -102,6 +104,7 @@ exports.getDashboardFollowingCount = async(user_id, start_date, end_date) => {
     try {
         const result = await db.query(`SELECT DATE(created_at) AS day, COUNT(*) AS follow_count FROM  followings WHERE designer_id = (SELECT id FROM designers WHERE user_id = $1) AND created_at BETWEEN $2 AND $3 GROUP BY day ORDER BY day;`, [user_id, start_date, end_date])
         if(result) return result.rows
+        return []
     } catch (e) {
         console.error('Error when getting follwing count:', e.message, e.stack);
         throw new Error('Error when getting follwing count', e);
@@ -112,6 +115,7 @@ exports.getDashboardVotesCount = async(user_id, start_date, end_date) => {
     try {
         const result = await db.query(`SELECT  p.title AS post_title, COUNT(*) AS vote_count FROM post_upvotes pu JOIN posts p ON pu.post_id = p.id WHERE p.created_by = (SELECT id FROM designers WHERE user_id = $1) AND pu.created_at BETWEEN $2 AND $3 GROUP BY p.title ORDER BY p.title`, [user_id, start_date, end_date])
         if(result) return result.rows
+        return []
     } catch (e) {
         console.error('Error when getting votes count:', e.message, e.stack);
         throw new Error('Error when getting votes count', e);
@@ -122,6 +126,7 @@ exports.getDashboardPostsCount = async(user_id, start_date, end_date) => {
     try {
         const result = await db.query(`SELECT DATE(created_at) AS day, COUNT(*) AS post_count FROM posts WHERE created_by = (SELECT id FROM designers WHERE user_id = $1) AND created_at BETWEEN $2 AND $3 GROUP BY day ORDER BY day`, [user_id, start_date, end_date])
         if(result) return result.rows
+        return []
     } catch (e) {
         console.error('Error when getting posts count:', e.message, e.stack);
         throw new Error('Error when getting posts count', e);

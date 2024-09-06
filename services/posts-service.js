@@ -116,6 +116,7 @@ exports.getById = async (postId) => {
         if (result.rows.length) {
             return result.rows[0];
         }
+        return null
     } catch (e) {
         console.error('Error when getting post:', e.message, e.stack);
         throw new Error('Error when getting post', e);
@@ -128,6 +129,7 @@ exports.getFullById = async (postId, userId) => {
         if (result.rows.length) {
             return result.rows[0];
         }
+        return null
     } catch (e) {
         console.error('Error when getting post:', e.message, e.stack);
         throw new Error('Error when getting post', e);

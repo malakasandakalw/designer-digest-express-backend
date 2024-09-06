@@ -9,6 +9,7 @@ exports.setSocketId = async (userId, socketId) => {
     `;
     try {
         await db.query(query, [userId, socketId]);
+        return true
     } catch (err) {
         console.error('Database error:', err);
     }
@@ -45,6 +46,7 @@ exports.getAllByDesigner = async (userId) => {
         if (result.rows.length) {
             return result.rows;
         }
+        return []
     } catch (e) {
         console.error('Error when getting chats:', e.message, e.stack);
         throw new Error('Error when getting chats', e);
@@ -57,6 +59,7 @@ exports.getSingleChat = async (senderId, receiverId) => {
         if (result.rows.length) {
             return result.rows;
         }
+        return []
     } catch (e) {
         console.error('Error when getting chats:', e.message, e.stack);
         throw new Error('Error when getting chats', e);
@@ -69,6 +72,7 @@ exports.getUnreadMessagesCount = async (to_user) => {
         if (result.rows) {
             return result.rows[0].count;
         }
+        return 0
     } catch (e) {
         console.error('Error when getting unread count:', e.message, e.stack);
         throw new Error('Error when getting unread count', e);
