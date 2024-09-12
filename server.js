@@ -18,7 +18,6 @@ const io = socketIo(server, {
 });
 
 const chatsService = require("./services/chats-service")
-const usersService = require("./services/user-service")
 const jwt = require('jsonwebtoken');
 const secretKey = 'backend_secret_key';
 
@@ -40,6 +39,7 @@ io.on('connection', (socket) => {
         const result = await chatsService.createMessage(data)
         if(result) {
             data.id = result[0].id
+            data.created_at = new Date()
             const {from_socket, to_socket} = await chatsService.getSocketIds(data.from_user, data.to_user)
             io.to(from_socket).emit('receiveMessage', data)
             io.to(to_socket).emit('receiveMessage', data)

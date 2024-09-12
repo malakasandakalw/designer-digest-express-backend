@@ -18,6 +18,8 @@ router.post("/upload", (req, res) => {
             fileType = 'image'
         } else if(isVideoFile(fileName)) {
             fileType = 'video'
+        } else {
+            fileType = 'other'
         }
         filesUploaded.push({
             name: file.name,
