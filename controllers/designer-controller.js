@@ -51,11 +51,13 @@ exports.getDashboardDate = async (req, res) => {
         const end_date = req.query.end_date
         const user_id = req.user.id
 
+        const stats = await designerService.getDashboardStats(user_id)
         const followings = await designerService.getDashboardFollowingCount(user_id, start_date, end_date)
         const votes = await designerService.getDashboardVotesCount(user_id, start_date, end_date)        
         const posts = await designerService.getDashboardPostsCount(user_id, start_date, end_date)
 
         const data = {
+            stats,
             followings,
             votes,
             posts
