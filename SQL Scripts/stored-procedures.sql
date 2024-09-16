@@ -76,6 +76,7 @@ RETURNS TABLE (
     thumbnail JSONB,
     categories JSONB,
     upvote_count INT,
+    user_has_voted BOOLEAN,
     total INT
 ) AS $$
 DECLARE
@@ -138,6 +139,7 @@ BEGIN
             'name', c.name
         )) FILTER (WHERE c.id IS NOT NULL), '[]'::jsonb) AS categories,
         COUNT(DISTINCT pu.voted_by)::int AS upvote_count,
+        EXISTS (SELECT 1 FROM post_upvotes pu WHERE pu.post_id = p.id AND pu.voted_by = p_user_id)::boolean AS user_has_voted,
         tc.total::int AS total
     FROM
         posts p
