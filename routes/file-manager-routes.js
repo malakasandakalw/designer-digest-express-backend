@@ -73,4 +73,35 @@ function isVideoFile(fileName) {
     return videoExtensions.includes(fileExtension);
 }
 
+function isValidFilePath(baseDir, filePath) {
+    const resolvedPath = path.resolve(baseDir, filePath);
+    return resolvedPath.startsWith(baseDir);
+}
+
+router.get("/download/*", (req, res) => {
+    const filePath = decodeURIComponent(req.params[0]);
+
+    const baseDirs = [
+        path.join(__dirname, '../uploads/vacancy'), 
+        path.join(__dirname, '../uploads/applications'), 
+        path.join(__dirname, '../uploads')
+    ];
+
+    let foundFilePath = null;
+
+    for (const baseDir of baseDirs) {
+        const absolutePath = path.join(baseDir, filePath);
+        if (isValidFilePath(baseDir, absolutePath) && fs.existsSync(absolutePath)) {
+            foundFilePath = absolutePath;
+            break;
+        }
+    }
+
+    if (foundFilePath) {
+        res.download(foundFilePath);
+    } else {
+        return res.status(404).json({ message: 'File not found' });
+    }
+});
+
 module.exports = router;
